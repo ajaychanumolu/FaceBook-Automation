@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messenger Automation - Facebook Automation MVP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook Automation MVP
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/messenger.html" class="nav-link active">Messenger</a>
+      <a href="/comments.html" class="nav-link">Comments</a>
+      <a href="/posts.html" class="nav-link">Posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Card 1: Main Messenger Settings -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">💬 Messenger Auto-Reply Automation</h1>
+        <span id="messengerStatusBadge" class="badge badge-disconnected">OFF</span>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        When someone messages your Facebook Page, your server automatically matches keywords or sends your fallback reply via Meta Send API.
+      </p>
+
+      <div id="alertBox" style="display: none;"></div>
+
+      <form id="messengerForm">
+
+        <!-- Automation Toggle Switch -->
+        <div class="switch-container">
+          <div>
+            <div class="switch-label">Messenger Auto-Reply Status</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Enable or pause automatic responses to incoming messages</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="messengerToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Default Fallback Message -->
+        <div class="form-group">
+          <label for="replyMessageInput">Default Fallback Message *</label>
+          <textarea id="replyMessageInput" placeholder="Hello! Thanks for messaging us." rows="3">Hello! Thanks for messaging us.</textarea>
+          <div class="help-text">Sent when no specific keyword rules match the incoming message.</div>
+        </div>
+
+        <!-- Section: Keyword Rules -->
+        <div style="margin-top: 2rem; border-top: 1px solid var(--border-light); padding-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 700;">🎯 Keyword-Specific Rules</h2>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Send tailored replies when incoming messages contain specific keywords (e.g. price, order, help).</div>
+            </div>
+          </div>
+
+          <!-- Rules Table -->
+          <div class="table-responsive" style="margin-bottom: 1.25rem;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Keyword</th>
+                  <th style="width: 20%;">Match Type</th>
+                  <th style="width: 45%;">Custom Reply</th>
+                  <th style="width: 10%;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="rulesTableBody">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-muted);">No keyword rules added yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Add Rule Sub-form -->
+          <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;">+ Add Keyword Rule</h3>
+            <div style="display: grid; grid-template-columns: 1fr 140px 2fr auto; gap: 0.75rem; align-items: flex-end;">
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Keyword</label>
+                <input type="text" id="newKeyword" placeholder="e.g. price, support, location" style="margin-top: 0.25rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Match</label>
+                <select id="newMatchType" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-top: 0.25rem;">
+                  <option value="contains">Contains</option>
+                  <option value="exact">Exact match</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Response Message</label>
+                <input type="text" id="newReplyText" placeholder="e.g. Our starter plan is $29/mo. Check..." style="margin-top: 0.25rem;">
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="addRule()" style="height: 42px;">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="btn-group">
+          <button type="submit" id="saveMessengerBtn" class="btn btn-primary">💾 Save All Messenger Settings</button>
+          <a href="/dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Card 2: Interactive Simulator -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.1rem;">🧪 Live Message Simulator</h2>
+        <span class="badge badge-info">Interactive Preview</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Test how your bot will respond to a user message without needing to send an actual message on Facebook.
+      </p>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <input type="text" id="simulateInput" placeholder="Type a test message (e.g. 'what is the price?' or 'hello')" style="flex: 1;">
+        <button type="button" class="btn btn-secondary" onclick="simulateMessage()">Test Response</button>
+      </div>
+
+      <div id="simulateResult" style="display: none; margin-top: 1rem;"></div>
+    </div>
+
+    <!-- Card 3: Live Testing Instructions -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.1rem;">📋 Meta Testing Guidelines</h2>
+      </div>
+      <ol style="margin-left: 1.5rem; color: var(--text-main); font-size: 0.95rem; line-height: 1.8;">
+        <li>Make sure your Facebook Page is connected on the <a href="/index.html">Connect page</a>.</li>
+        <li>Ensure your server is live and ngrok is active (<code>ngrok http 3000</code>).</li>
+        <li>In Meta App Dashboard, ensure the Webhook field <code>messages</code> is subscribed.</li>
+        <li>While in <strong>Development Mode</strong>, send test messages from a Facebook account with an <strong>App Role</strong> (e.g. Tester <code>Ajay Ch</code>).</li>
+        <li>The bot will reply immediately within 1-2 seconds! Inspect live logs on the <a href="/dashboard.html">Dashboard</a>.</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <footer>
+    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+  </footer>
+
+  <script>
+    let rules = [];
+
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.innerHTML = msg;
+      box.style.display = 'block';
+    }
+
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/messenger');
+        const data = await res.json();
+        if (data.success && data.automation) {
+          const auto = data.automation;
+          document.getElementById('messengerToggle').checked = auto.isEnabled;
+          document.getElementById('replyMessageInput').value = auto.replyText || 'Hello! Thanks for messaging us.';
+          rules = auto.rules || [];
+          renderRulesTable();
+          updateBadge(auto.isEnabled);
+        }
+      } catch (err) {
+        showAlert('Error loading Messenger settings: ' + err.message, 'danger');
+      }
+    }
+
+    function updateBadge(isEnabled) {
+      const badge = document.getElementById('messengerStatusBadge');
+      if (isEnabled) {
+        badge.className = 'badge badge-connected';
+        badge.textContent = 'ON';
+      } else {
+        badge.className = 'badge badge-disconnected';
+        badge.textContent = 'OFF';
+      }
+    }
+
+    function renderRulesTable() {
+      const tbody = document.getElementById('rulesTableBody');
+      tbody.innerHTML = '';
+
+      if (rules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No keyword rules configured. The default fallback reply will be used for all incoming messages.</td></tr>';
+        return;
+      }
+
+      rules.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="color: var(--primary);">"${r.keyword}"</strong></td>
+          <td><span class="badge ${r.matchType === 'exact' ? 'badge-info' : 'badge-connected'}">${r.matchType}</span></td>
+          <td><span style="font-size: 0.9rem;">${r.replyText}</span></td>
+          <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRule(${idx})">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addRule() {
+      const kw = document.getElementById('newKeyword').value.trim();
+      const matchType = document.getElementById('newMatchType').value;
+      const reply = document.getElementById('newReplyText').value.trim();
+
+      if (!kw || !reply) {
+        showAlert('Keyword and Response Message are required to add a rule.', 'warning');
+        return;
+      }
+
+      rules.push({ keyword: kw, matchType, replyText: reply });
+      document.getElementById('newKeyword').value = '';
+      document.getElementById('newReplyText').value = '';
+      renderRulesTable();
+      showAlert(`Rule for keyword "<strong>${kw}</strong>" added to list. Click <strong>Save All Messenger Settings</strong> to persist.`, 'info');
+    }
+
+    function removeRule(idx) {
+      rules.splice(idx, 1);
+      renderRulesTable();
+    }
+
+    async function simulateMessage() {
+      const msg = document.getElementById('simulateInput').value.trim();
+      const resBox = document.getElementById('simulateResult');
+      if (!msg) {
+        resBox.style.display = 'block';
+        resBox.innerHTML = '<div class="alert alert-warning">Please type a message to test.</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/messenger/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        resBox.style.display = 'block';
+        if (data.matched) {
+          resBox.innerHTML = `
+            <div class="alert alert-success">
+              <strong>Match Found!</strong> Trigger: <code>${data.ruleType}</code>${data.keyword ? ` (Keyword: "${data.keyword}")` : ''}<br>
+              <strong>Bot Response:</strong> "${data.replyText}"
+            </div>
+          `;
+        } else {
+          resBox.innerHTML = `<div class="alert alert-danger">${data.reason || 'No match found.'}</div>`;
+        }
+      } catch (e) {
+        resBox.style.display = 'block';
+        resBox.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+      }
+    }
+
+    document.getElementById('messengerToggle').addEventListener('change', (e) => {
+      updateBadge(e.target.checked);
+    });
+
+    document.getElementById('messengerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isEnabled = document.getElementById('messengerToggle').checked;
+      const replyText = document.getElementById('replyMessageInput').value.trim();
+
+      if (!replyText) {
+        showAlert('Fallback message cannot be empty.', 'warning');
+        return;
+      }
+
+      showAlert('Saving Messenger auto-reply settings...', 'info');
+
+      try {
+        const res = await fetch('/api/messenger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isEnabled, replyText, rules })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert('Messenger auto-reply settings & keyword rules saved successfully!', 'success');
+          updateBadge(isEnabled);
+        } else {
+          showAlert('Failed to save settings: ' + (data.error || 'Unknown error'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadSettings);
+  </script>
+</body>
+</html>

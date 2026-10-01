@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Facebook Automation MVP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook Automation MVP
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="/messenger.html" class="nav-link">Messenger</a>
+      <a href="/comments.html" class="nav-link">Comments</a>
+      <a href="/posts.html" class="nav-link">Posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Feedback Banner -->
+    <div id="alertBox" style="display: none;"></div>
+
+    <!-- Section 1: Meta App & System Diagnostics Checklist -->
+    <div class="card" style="border-left: 4px solid var(--primary);">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.15rem;">🛠️ Meta App &amp; Server Readiness Diagnostics</h2>
+        <button class="btn btn-secondary btn-sm" onclick="checkSystemHealth()">🔄 Check Health</button>
+      </div>
+
+      <div class="checklist-card">
+        <div class="checklist-item">
+          <div>
+            <strong>1. MongoDB Atlas Connection</strong>
+            <div id="dbDiagText" style="font-size: 0.8rem; color: var(--text-muted);">Checking database...</div>
+          </div>
+          <span id="dbDiagBadge" class="badge badge-disconnected">Checking...</span>
+        </div>
+
+        <div class="checklist-item">
+          <div>
+            <strong>2. Public ngrok Webhook Tunnel</strong>
+            <div id="tunnelDiagText" style="font-size: 0.8rem; color: var(--text-muted);">Callback URL: <code id="displayWebhookUrl">-</code></div>
+          </div>
+          <span id="tunnelDiagBadge" class="badge badge-info">Configured</span>
+        </div>
+
+        <div class="checklist-item">
+          <div>
+            <strong>3. Meta Developer App Configuration</strong>
+            <div id="appDiagText" style="font-size: 0.8rem; color: var(--text-muted);">App ID: <code id="displayAppId">-</code> &bull; Version: <code id="displayGraphVer">-</code></div>
+          </div>
+          <span id="appDiagBadge" class="badge badge-connected">Configured</span>
+        </div>
+
+        <div class="checklist-item">
+          <div>
+            <strong>4. Facebook Page Connection</strong>
+            <div id="pageDiagText" style="font-size: 0.8rem; color: var(--text-muted);">Verifying connected page...</div>
+          </div>
+          <span id="pageDiagBadge" class="badge badge-disconnected">Checking...</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="syncFacebookComments()">🔄 Sync &amp; Reply Comments</button>
+        <button class="btn btn-secondary btn-sm" onclick="testWebhookHandshake()">🧪 Ping Webhook Verification</button>
+        <button class="btn btn-secondary btn-sm" onclick="testCommentWebhook()">⚡ Test Comment Webhook</button>
+        <a href="https://developers.facebook.com/apps/2182342416011858/webhooks/" target="_blank" class="btn btn-secondary btn-sm">🔗 Open Meta Webhooks Settings</a>
+        <a href="https://developers.facebook.com/apps/2182342416011858/roles/" target="_blank" class="btn btn-secondary btn-sm">👥 Open Meta Roles (Testers)</a>
+      </div>
+    </div>
+
+    <!-- Section 2: Automation Overview & Metrics -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Automation Control Center</h1>
+        <span id="pageStatusBadge" class="badge badge-disconnected">Checking...</span>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <div style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">ACTIVE FACEBOOK PAGE</div>
+          <div id="pageNameDisplay" style="font-size: 1.4rem; font-weight: 700; color: var(--text-main);">-</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Page ID: <code id="pageIdDisplay">-</code></div>
+        </div>
+
+        <div class="btn-group">
+          <button id="resubscribeWebhookBtn" class="btn btn-secondary btn-sm" title="Re-subscribe Page to App Webhook">
+            🔄 Re-subscribe Page Webhooks
+          </button>
+          <a href="/index.html" class="btn btn-secondary btn-sm">⚙️ Change / Reconnect Page</a>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Connection</div>
+          <div id="statConnection" class="stat-value" style="font-size: 1.3rem; color: var(--danger);">DISCONNECTED</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Messenger Auto-Reply</div>
+          <div id="statMessenger" class="stat-value" style="font-size: 1.3rem;">OFF</div>
+          <small id="statMessengerRules" style="color: var(--text-muted);">0 rules</small>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Comment Automations</div>
+          <div id="statComments" class="stat-value">0</div>
+          <small style="color: var(--text-muted);">Global &amp; Post rules</small>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Scheduled Posts</div>
+          <div id="statScheduled" class="stat-value">0</div>
+          <small style="color: var(--text-muted);">Pending queue</small>
+        </div>
+      </div>
+
+      <!-- Action Navigation Buttons -->
+      <div class="btn-group" style="padding-top: 1rem; border-top: 1px solid var(--border-light);">
+        <a href="/messenger.html" class="btn btn-primary">💬 Configure Messenger Rules</a>
+        <a href="/comments.html" class="btn btn-primary">📝 Post Comment Automations</a>
+        <a href="/posts.html" class="btn btn-primary">➕ Create &amp; Schedule Post</a>
+      </div>
+    </div>
+
+    <!-- Section 3: Recent Webhook Events Feed -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Live Webhooks &amp; Events Stream</h2>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearEvents()">🗑️ Clear Logs</button>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-secondary active" onclick="filterEvents('all', this)">All</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterEvents('messenger', this)">Messenger</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterEvents('comment', this)">Comments</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterEvents('post', this)">Posts</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterEvents('error', this)">Errors</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Sender / Post</th>
+              <th>Actions Taken</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="eventsTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading live events...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Event Detail Modal -->
+  <div id="eventModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 id="modalEventTitle" style="font-size: 1.2rem;">Event Details</h3>
+        <button class="btn btn-sm btn-secondary" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modalEventContent"></div>
+    </div>
+  </div>
+
+  <footer>
+    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+  </footer>
+
+  <script>
+    let currentFilter = 'all';
+    let cachedEvents = [];
+
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.innerHTML = msg;
+      box.style.display = 'block';
+    }
+
+    async function checkSystemHealth() {
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+
+        // 1. DB Status
+        const dbBadge = document.getElementById('dbDiagBadge');
+        const dbText = document.getElementById('dbDiagText');
+        if (data.mongodb.status === 'connected') {
+          dbBadge.className = 'badge badge-connected';
+          dbBadge.textContent = 'CONNECTED';
+          dbText.textContent = 'Connected to MongoDB Atlas cluster';
+        } else {
+          dbBadge.className = 'badge badge-disconnected';
+          dbBadge.textContent = data.mongodb.status.toUpperCase();
+          dbText.innerHTML = `<span style="color:var(--danger);">${data.mongodb.note}</span>`;
+        }
+
+        // 2. Meta & Tunnel
+        document.getElementById('displayAppId').textContent = data.meta.appId;
+        document.getElementById('displayGraphVer').textContent = data.meta.graphVersion;
+        if (data.meta.baseUrl) {
+          document.getElementById('displayWebhookUrl').textContent = `${data.meta.baseUrl}/webhook`;
+          document.getElementById('tunnelDiagBadge').className = 'badge badge-connected';
+          document.getElementById('tunnelDiagBadge').textContent = 'ONLINE';
+        }
+      } catch (e) {
+        console.error('Health check failed:', e);
+      }
+    }
+
+    async function testWebhookHandshake() {
+      showAlert('Testing Webhook verification handshake locally...', 'info');
+      try {
+        const token = 'fb_mvp_verify_token_2026';
+        const challenge = 'test_challenge_' + Math.floor(Math.random() * 10000);
+        const res = await fetch(`/webhook?hub.mode=subscribe&hub.verify_token=${token}&hub.challenge=${challenge}`);
+        const text = await res.text();
+
+        if (res.ok && text === challenge) {
+          showAlert(`✅ <strong>Webhook Handshake Verified!</strong> Returned challenge "${challenge}" with HTTP 200 OK. Meta will successfully verify your Webhook.`, 'success');
+        } else {
+          showAlert(`❌ Webhook handshake failed. Status: ${res.status}. Output: ${text}`, 'danger');
+        }
+        loadDashboard();
+      } catch (err) {
+        showAlert('Error testing webhook: ' + err.message, 'danger');
+      }
+    }
+
+    async function syncFacebookComments() {
+      showAlert('🔄 Connecting to Meta and scanning Facebook posts for new comments...', 'info');
+      try {
+        const res = await fetch('/api/comments/sync', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`✅ <strong>Sync Complete:</strong> ${data.message || `Processed ${data.processedCount || 0} comments.`}`, 'success');
+          loadDashboard();
+        } else {
+          showAlert(`⚠️ Sync Notice: ${data.error || data.message || 'Could not complete sync.'}`, 'warning');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      }
+    }
+
+    async function testCommentWebhook() {
+      showAlert('Dispatching test comment webhook...', 'info');
+      try {
+        const res = await fetch('/api/comments/test-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messageText: 'Dashboard 1-click test comment' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('✅ <strong>Comment Webhook Dispatched!</strong> Event was processed and recorded in the Live Stream below.', 'success');
+          loadDashboard();
+        } else {
+          showAlert('Failed: ' + (data.error || 'Unknown error'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Error: ' + err.message, 'danger');
+      }
+    }
+
+    async function loadDashboard() {
+      try {
+        checkSystemHealth();
+
+        const statsRes = await fetch('/api/events/stats');
+        const statsData = await statsRes.json();
+
+        if (statsData.success) {
+          const page = statsData.page;
+          const statusBadge = document.getElementById('pageStatusBadge');
+          const pageDiagBadge = document.getElementById('pageDiagBadge');
+          const pageDiagText = document.getElementById('pageDiagText');
+          const statConn = document.getElementById('statConnection');
+
+          if (page.connected) {
+            document.getElementById('pageNameDisplay').textContent = page.name;
+            document.getElementById('pageIdDisplay').textContent = page.id;
+            statusBadge.className = 'badge badge-connected';
+            statusBadge.textContent = 'CONNECTED';
+            statConn.textContent = 'CONNECTED';
+            statConn.style.color = 'var(--success)';
+
+            pageDiagBadge.className = 'badge badge-connected';
+            pageDiagBadge.textContent = 'CONNECTED';
+            pageDiagText.textContent = `Page "${page.name}" (${page.id}) &bull; Webhook: ${page.webhookSubscribed ? 'Subscribed' : 'Pending'}`;
+          } else {
+            document.getElementById('pageNameDisplay').textContent = 'No Page Connected';
+            document.getElementById('pageIdDisplay').textContent = 'None';
+            statusBadge.className = 'badge badge-disconnected';
+            statusBadge.textContent = 'DISCONNECTED';
+            statConn.textContent = 'DISCONNECTED';
+            statConn.style.color = 'var(--danger)';
+
+            pageDiagBadge.className = 'badge badge-disconnected';
+            pageDiagBadge.textContent = 'NOT CONNECTED';
+            pageDiagText.innerHTML = 'Go to <a href="/index.html">Connect Page</a> to link your Facebook Page.';
+          }
+
+          // Messenger
+          const statMessenger = document.getElementById('statMessenger');
+          statMessenger.textContent = statsData.messenger.isEnabled ? 'ON' : 'OFF';
+          statMessenger.style.color = statsData.messenger.isEnabled ? 'var(--success)' : 'var(--text-muted)';
+          document.getElementById('statMessengerRules').textContent = `${statsData.messenger.rulesCount || 0} keyword rule(s)`;
+
+          // Comment Automations Count
+          document.getElementById('statComments').textContent = statsData.commentCount;
+
+          // Scheduled Posts Count
+          document.getElementById('statScheduled').textContent = statsData.scheduledCount;
+        }
+
+        await loadEvents();
+      } catch (err) {
+        console.error('Error loading dashboard:', err);
+      }
+    }
+
+    async function loadEvents() {
+      try {
+        const res = await fetch(`/api/events?type=${currentFilter}`);
+        const data = await res.json();
+        cachedEvents = data.events || [];
+        renderEventsTable(cachedEvents);
+      } catch (err) {
+        console.error('Error loading events:', err);
+      }
+    }
+
+    function filterEvents(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.card .btn-group button, .card button.btn-secondary').forEach(b => {
+        if (b.innerText.toLowerCase().includes(type) || (type === 'all' && b.innerText === 'All')) {
+          b.classList.add('active');
+        } else if (b.innerText !== 'Clear Logs' && b.innerText !== 'Refresh') {
+          b.classList.remove('active');
+        }
+      });
+      loadEvents();
+    }
+
+    function renderEventsTable(events) {
+      const tbody = document.getElementById('eventsTableBody');
+      tbody.innerHTML = '';
+
+      if (events.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No events recorded yet. Send a test message or comment on Facebook to see live events!</td></tr>';
+        return;
+      }
+
+      events.forEach((ev, idx) => {
+        const tr = document.createElement('tr');
+        const time = new Date(ev.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        let badgeClass = 'badge-info';
+        if (ev.status === 'processed') badgeClass = 'badge-connected';
+        if (ev.status === 'failed') badgeClass = 'badge-disconnected';
+        if (ev.status === 'ignored') badgeClass = 'badge-warning';
+
+        const actions = (ev.actionsTaken && ev.actionsTaken.length > 0)
+          ? ev.actionsTaken.join('<br>')
+          : (ev.error ? `<span style="color:var(--danger);">${ev.error.message || 'Error occurred'}</span>` : '-');
+
+        const senderOrPost = ev.senderId ? `User: ${ev.senderId}` : (ev.postId ? `Post: ${ev.postId}` : '-');
+
+        tr.innerHTML = `
+          <td><small style="color: var(--text-muted);">${time}</small></td>
+          <td><strong>${ev.eventType.toUpperCase()}</strong></td>
+          <td><span class="badge ${badgeClass}">${ev.status}</span></td>
+          <td><small>${senderOrPost}</small></td>
+          <td><small>${actions}</small></td>
+          <td><button class="btn btn-secondary btn-sm" onclick="viewEventDetails(${idx})">Inspect</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewEventDetails(idx) {
+      const ev = cachedEvents[idx];
+      if (!ev) return;
+
+      document.getElementById('modalEventTitle').textContent = `${ev.eventType.toUpperCase()} Event (${ev.status})`;
+      document.getElementById('modalEventContent').innerHTML = `
+        <p><strong>Created:</strong> ${new Date(ev.createdAt).toLocaleString()}</p>
+        <p><strong>Message / Text:</strong> "${ev.messageText || '-'}"</p>
+        <p><strong>Actions Taken:</strong> ${ev.actionsTaken?.join(', ') || 'None'}</p>
+        ${ev.error ? `<div class="alert alert-danger" style="margin: 0.5rem 0;"><strong>Error:</strong> ${JSON.stringify(ev.error, null, 2)}</div>` : ''}
+        <h4 style="margin-top: 1rem; font-size: 0.95rem;">Raw Payload / Context:</h4>
+        <pre class="code-block">${JSON.stringify(ev.rawPayload || ev, null, 2)}</pre>
+      `;
+
+      document.getElementById('eventModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('eventModal').classList.remove('active');
+    }
+
+    async function clearEvents() {
+      if (!confirm('Clear all event logs?')) return;
+      await fetch('/api/events/clear', { method: 'POST' });
+      loadEvents();
+    }
+
+    // Re-subscribe webhook
+    document.getElementById('resubscribeWebhookBtn').addEventListener('click', async () => {
+      showAlert('Attempting to subscribe connected Page to webhooks...', 'info');
+      try {
+        const res = await fetch('/api/pages/subscribe-webhooks', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(data.message, 'success');
+        } else {
+          showAlert('Subscription notice: ' + (data.error?.message || JSON.stringify(data.error)), 'warning');
+        }
+        loadDashboard();
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      // Auto-poll events every 10 seconds for live updates
+      setInterval(loadEvents, 10000);
+    });
+  </script>
+</body>
+</html>

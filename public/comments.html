@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comment Automation - Facebook Automation MVP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook Automation MVP
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/messenger.html" class="nav-link">Messenger</a>
+      <a href="/comments.html" class="nav-link active">Comments</a>
+      <a href="/posts.html" class="nav-link">Posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Alert Box -->
+    <div id="alertBox" style="display: none;"></div>
+
+    <!-- Diagnostic Banner: Token Permissions for Comments -->
+    <div id="permDiagCard" class="card" style="display: none; border-left: 4px solid var(--warning); padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>⚠️</span> <span id="permDiagTitle">Comment Permissions Notice</span>
+          </div>
+          <div id="permDiagDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Checking Page token permissions...
+          </div>
+        </div>
+        <div id="permDiagAction">
+          <a href="/index.html" class="btn btn-primary btn-sm">🔑 Re-authorize Facebook Page</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-Time Comment Sync & Background Poller Card -->
+    <div class="card" style="border-left: 4px solid var(--primary); background: linear-gradient(to right, #eff6ff, #ffffff); margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.05rem; color: var(--primary-dark);">
+            <span>⚡ Live Facebook Comment Auto-Sync</span>
+            <span class="badge badge-connected" style="font-size: 0.75rem;">🟢 Background Poller Active (Every 25s)</span>
+          </div>
+          <p style="margin: 0.35rem 0 0 0; font-size: 0.88rem; color: var(--text-muted); max-width: 680px;">
+            The background poller continuously scans your Facebook posts for new comments and automatically executes likes, public replies, and private Messenger DMs. Click <strong>Sync Now</strong> below for instant processing.
+          </p>
+        </div>
+        <div>
+          <button id="syncCommentsBtn" class="btn btn-primary" onclick="syncFacebookCommentsNow()" style="box-shadow: 0 4px 6px -1px rgba(24, 119, 242, 0.3); font-weight: 600;">
+            🔄 Sync &amp; Reply Comments Now
+          </button>
+        </div>
+      </div>
+      <div id="syncResultBanner" style="display: none; margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.88rem;"></div>
+    </div>
+
+    <!-- Section 1: Global Default Comment Automation -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">🌐 Global Comment Auto-Reply</h1>
+        <span id="globalStatusBadge" class="badge badge-disconnected">OFF</span>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+        When enabled, automatically responds to comments on <strong>ANY post</strong> on your Facebook Page whenever no post-specific automation rule exists.
+      </p>
+
+      <form id="globalCommentForm">
+        <div class="switch-container">
+          <div>
+            <div class="switch-label">Global Comment Automation Status</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Enable default auto-reply for all Page posts</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="globalToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-container">
+          <div>
+            <div class="switch-label">❤️ Auto-Like User Comments</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Automatically like the user's comment from your Page before replying</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="globalAutoLike">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="globalPublicReply">Public Comment Reply *</label>
+          <input type="text" id="globalPublicReply" placeholder="Thanks for reaching out! We appreciate your engagement." value="Thanks for reaching out! We appreciate your engagement." required>
+          <div class="help-text">Threaded reply posted publicly beneath the user's comment.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="globalPrivateReply">Optional Private Messenger DM</label>
+          <input type="text" id="globalPrivateReply" placeholder="Hi! We saw your comment. Let us know if you need any assistance!">
+          <div class="help-text">Sent privately to the commenter's inbox via Meta's Private Replies API (subject to Meta 7-day policy).</div>
+        </div>
+
+        <div class="form-group">
+          <label for="globalKeywords">Optional Keyword Filter (comma-separated)</label>
+          <input type="text" id="globalKeywords" placeholder="e.g. price, details, dm, info (leave blank to reply to ALL comments)">
+          <div class="help-text">If specified, the bot only responds when the comment contains at least one of these words.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">💾 Save Global Comment Settings</button>
+      </form>
+    </div>
+
+    <!-- Section 2: Post-Specific Comment Automation -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📝 Post-Specific Comment Automations</h2>
+        <button id="fetchPostsBtn" class="btn btn-secondary btn-sm" onclick="fetchPagePosts()">🔄 Fetch Page Posts</button>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        Fetch existing posts from your Facebook Page to attach dedicated comment automations with custom responses.
+      </p>
+
+      <div id="postsListContainer">
+        <div style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+          Click <strong>Fetch Page Posts</strong> to retrieve posts from your connected Facebook Page.
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal/Form for Post-Specific Configuration -->
+    <div id="automationFormCard" class="card" style="display: none; border: 2px solid var(--primary);">
+      <div class="card-header">
+        <h2 class="card-title">Configure Automation for Post</h2>
+        <button class="btn btn-secondary btn-sm" onclick="hideAutomationForm()">✕ Close</button>
+      </div>
+
+      <form id="commentAutomationForm">
+        <!-- Selected Post Info -->
+        <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+          <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">SELECTED POST:</div>
+          <div id="formPostMessage" style="font-size: 1.05rem; font-weight: 600; margin: 0.35rem 0;">-</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Post ID: <code id="formPostId">-</code></div>
+          <input type="hidden" id="selectedPostId">
+          <input type="hidden" id="selectedPostMessage">
+        </div>
+
+        <!-- Auto-Like Toggle -->
+        <div class="switch-container">
+          <div>
+            <div class="switch-label">❤️ Auto-Like Comments on This Post</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Automatically like comments before replying</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="postAutoLike" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Public Reply -->
+        <div class="form-group">
+          <label for="publicReplyInput">Public Reply *</label>
+          <input type="text" id="publicReplyInput" placeholder="Thanks for your comment! Check out our website for more details." required>
+          <div class="help-text">Posted as a public reply to the user's comment on Facebook.</div>
+        </div>
+
+        <!-- Optional Private DM -->
+        <div class="form-group">
+          <label for="privateReplyInput">Optional Private Messenger DM</label>
+          <input type="text" id="privateReplyInput" placeholder="Thanks for commenting! Here is the direct link: https://example.com">
+          <div class="help-text">Direct message sent privately to the commenter on Messenger.</div>
+        </div>
+
+        <!-- Keyword Filter -->
+        <div class="form-group">
+          <label for="postKeywordsInput">Optional Keyword Filter (comma-separated)</label>
+          <input type="text" id="postKeywordsInput" placeholder="e.g. price, link, buy (leave blank to reply to any comment)">
+        </div>
+
+        <!-- Toggle ON/OFF -->
+        <div class="switch-container">
+          <div>
+            <div class="switch-label">Enable Automation for this Post</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Activate auto-reply for comments on this post</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="commentAutoToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">Save Automation for this Post</button>
+          <button type="button" class="btn btn-secondary" onclick="hideAutomationForm()">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section: Interactive Live Comment Simulator & Webhook Tester -->
+    <div class="card" style="border: 1px solid var(--primary-light);">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.15rem;">🧪 Live Comment Simulator &amp; Webhook Tester</h2>
+        <span class="badge badge-info">Interactive Verification</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Test how your bot evaluates comment rules (Post-specific vs. Global fallback), verifies keywords, and triggers auto-replies.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Target Post</label>
+          <select id="simulatePostSelect" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-top: 0.25rem;">
+            <option value="">🌐 Global Rule (Any Post / Fallback)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Comment Text</label>
+          <input type="text" id="simulateCommentInput" placeholder="e.g. 'How much does this cost?' or 'price please'" style="margin-top: 0.25rem;">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600;">Real Facebook Comment ID (Optional)</label>
+          <input type="text" id="realCommentIdInput" placeholder="Paste real comment ID to reply on Facebook" style="margin-top: 0.25rem;">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-primary" onclick="simulateComment()">🧪 Test Rule Matching</button>
+        <button type="button" class="btn btn-secondary" onclick="dispatchMockWebhook()">⚡ Dispatch Webhook Test</button>
+      </div>
+
+      <div id="simulateCommentResult" style="display: none; margin-top: 1.25rem; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 1rem;"></div>
+    </div>
+
+    <!-- Section 3: Active Automations List -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Active Comment Automations Queue</h2>
+        <button class="btn btn-secondary btn-sm" onclick="loadSavedAutomations()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Target</th>
+              <th>Public Reply</th>
+              <th>Private DM</th>
+              <th>Auto-Like</th>
+              <th>Keywords</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="automationsTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted);">Loading automations...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+  </footer>
+
+  <script>
+    let fetchedPosts = [];
+
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.innerHTML = msg;
+      box.style.display = 'block';
+    }
+
+    // Load Global Settings
+    async function loadGlobalSettings() {
+      try {
+        const res = await fetch('/api/comments/global');
+        const data = await res.json();
+        if (data.success && data.automation) {
+          const auto = data.automation;
+          document.getElementById('globalToggle').checked = auto.isEnabled;
+          document.getElementById('globalAutoLike').checked = auto.autoLike;
+          document.getElementById('globalPublicReply').value = auto.publicReply || '';
+          document.getElementById('globalPrivateReply').value = auto.messengerReply || '';
+          document.getElementById('globalKeywords').value = (auto.keywords || []).join(', ');
+
+          const badge = document.getElementById('globalStatusBadge');
+          if (auto.isEnabled) {
+            badge.className = 'badge badge-connected';
+            badge.textContent = 'ON';
+          } else {
+            badge.className = 'badge badge-disconnected';
+            badge.textContent = 'OFF';
+          }
+        }
+      } catch (e) {
+        console.error('Error loading global settings:', e);
+      }
+    }
+
+    // Save Global Settings
+    document.getElementById('globalCommentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const isEnabled = document.getElementById('globalToggle').checked;
+      const autoLike = document.getElementById('globalAutoLike').checked;
+      const publicReply = document.getElementById('globalPublicReply').value.trim();
+      const messengerReply = document.getElementById('globalPrivateReply').value.trim();
+      const keywords = document.getElementById('globalKeywords').value;
+
+      showAlert('Saving global comment automation...', 'info');
+      try {
+        const res = await fetch('/api/comments/global', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isEnabled, autoLike, publicReply, messengerReply, keywords })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('Global comment automation settings saved successfully!', 'success');
+          loadGlobalSettings();
+          loadSavedAutomations();
+        } else {
+          showAlert('Failed to save: ' + (data.error || 'Unknown error'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Error saving global settings: ' + err.message, 'danger');
+      }
+    });
+
+    // Fetch Page Posts from Meta
+    async function fetchPagePosts() {
+      showAlert('Fetching posts from connected Facebook Page...', 'info');
+      const container = document.getElementById('postsListContainer');
+      container.innerHTML = '<div style="text-align: center; padding: 1.5rem;">Loading posts...</div>';
+
+      try {
+        const res = await fetch('/api/posts');
+        const data = await res.json();
+
+        if (!data.success) {
+          showAlert('Error fetching posts: ' + (data.error?.message || JSON.stringify(data.error)), 'danger');
+          container.innerHTML = '<div class="alert alert-danger">Could not fetch posts. Ensure your Page is connected.</div>';
+          return;
+        }
+
+        fetchedPosts = data.posts || [];
+        renderPostsList(fetchedPosts);
+        showAlert(`Retrieved ${fetchedPosts.length} post(s) from Facebook Page "${data.pageName || data.pageId}".`, 'success');
+      } catch (err) {
+        showAlert('Network error fetching posts: ' + err.message, 'danger');
+      }
+    }
+
+    function renderPostsList(posts) {
+      const container = document.getElementById('postsListContainer');
+      container.innerHTML = '';
+
+      if (posts.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">No posts found on this Facebook Page. Publish a post first!</div>';
+        return;
+      }
+
+      posts.forEach(p => {
+        const div = document.createElement('div');
+        div.style = 'background: white; border: 1px solid var(--border-light); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;';
+        
+        const preview = p.message || (p.story || 'Post with no text caption');
+        const time = new Date(p.created_time).toLocaleDateString();
+
+        div.innerHTML = `
+          <div style="flex: 1;">
+            <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;">"${preview.substring(0, 100)}${preview.length > 100 ? '...' : ''}"</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+              ID: <code>${p.id}</code> &bull; Posted on: ${time}
+              ${p.permalink_url ? `&bull; <a href="${p.permalink_url}" target="_blank">View on Facebook</a>` : ''}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick='openAutomationForm(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
+            ⚡ Automate This Post
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function openAutomationForm(post) {
+      document.getElementById('formPostMessage').textContent = post.message || post.story || 'Post without text';
+      document.getElementById('formPostId').textContent = post.id;
+      document.getElementById('selectedPostId').value = post.id;
+      document.getElementById('selectedPostMessage').value = post.message || '';
+      document.getElementById('automationFormCard').style.display = 'block';
+      document.getElementById('automationFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideAutomationForm() {
+      document.getElementById('automationFormCard').style.display = 'none';
+    }
+
+    // Save Post-Specific Automation
+    document.getElementById('commentAutomationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const postId = document.getElementById('selectedPostId').value;
+      const postMessage = document.getElementById('selectedPostMessage').value;
+      const publicReply = document.getElementById('publicReplyInput').value.trim();
+      const messengerReply = document.getElementById('privateReplyInput').value.trim();
+      const autoLike = document.getElementById('postAutoLike').checked;
+      const keywords = document.getElementById('postKeywordsInput').value;
+      const isEnabled = document.getElementById('commentAutoToggle').checked;
+
+      showAlert('Saving post comment automation...', 'info');
+
+      try {
+        const res = await fetch('/api/comments/automations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, postMessage, publicReply, messengerReply, autoLike, keywords, isEnabled })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('Post comment automation saved successfully!', 'success');
+          hideAutomationForm();
+          loadSavedAutomations();
+        } else {
+          showAlert('Error: ' + (data.error || 'Failed to save'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      }
+    });
+
+    // Load All Automations
+    async function loadSavedAutomations() {
+      try {
+        const res = await fetch('/api/comments/automations');
+        const data = await res.json();
+        const tbody = document.getElementById('automationsTableBody');
+        tbody.innerHTML = '';
+
+        const autos = data.automations || [];
+        if (autos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No comment automations configured yet.</td></tr>';
+          return;
+        }
+
+        autos.forEach(auto => {
+          const tr = document.createElement('tr');
+          const target = auto.isGlobal
+            ? '<span class="badge badge-info" style="font-size: 0.85rem;">🌐 All Posts (Global Rule)</span>'
+            : `<div><strong>Post:</strong> <code style="font-size:0.8rem;">${auto.postId}</code></div><small style="color:var(--text-muted);">${(auto.postMessage || '').substring(0, 30)}...</small>`;
+
+          const kwBadges = (auto.keywords && auto.keywords.length > 0)
+            ? auto.keywords.map(k => `<span class="tag-badge">${k}</span>`).join(' ')
+            : '<span style="color:var(--text-muted); font-size: 0.8rem;">Any</span>';
+
+          const autoLikeBadge = auto.autoLike
+            ? '<span class="badge badge-connected">❤️ Yes</span>'
+            : '<span style="color:var(--text-muted); font-size: 0.8rem;">No</span>';
+
+          tr.innerHTML = `
+            <td>${target}</td>
+            <td><small>${auto.publicReply || '-'}</small></td>
+            <td><small>${auto.messengerReply || '-'}</small></td>
+            <td>${autoLikeBadge}</td>
+            <td>${kwBadges}</td>
+            <td><span class="badge ${auto.isEnabled ? 'badge-connected' : 'badge-disconnected'}">${auto.isEnabled ? 'ACTIVE' : 'OFF'}</span></td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" onclick="toggleAuto('${auto._id}')">${auto.isEnabled ? 'Pause' : 'Enable'}</button>
+                ${!auto.isGlobal ? `<button class="btn btn-danger btn-sm" onclick="deleteAuto('${auto._id}')">Delete</button>` : ''}
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        updateSimulateDropdown(fetchedPosts, autos);
+      } catch (err) {
+        console.error('Error loading automations:', err);
+      }
+    }
+
+    async function toggleAuto(id) {
+      await fetch(`/api/comments/automations/${id}/toggle`, { method: 'PATCH' });
+      loadSavedAutomations();
+      loadGlobalSettings();
+    }
+
+    async function deleteAuto(id) {
+      if (!confirm('Are you sure you want to delete this automation?')) return;
+      await fetch(`/api/comments/automations/${id}`, { method: 'DELETE' });
+      loadSavedAutomations();
+    }
+
+    function updateSimulateDropdown(posts, automations) {
+      const select = document.getElementById('simulatePostSelect');
+      if (!select) return;
+      select.innerHTML = '<option value="">🌐 Global Rule (Any Post / Fallback)</option>';
+
+      const added = new Set();
+      (automations || []).forEach(a => {
+        if (!a.isGlobal && a.postId) {
+          added.add(a.postId);
+          const opt = document.createElement('option');
+          opt.value = a.postId;
+          opt.textContent = `🎯 Automated Post: ${a.postId.substring(0, 20)}... ("${(a.postMessage || '').substring(0, 30)}")`;
+          select.appendChild(opt);
+        }
+      });
+
+      (posts || []).forEach(p => {
+        if (!added.has(p.id)) {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `📄 Post: ${p.id.substring(0, 20)}... ("${(p.message || '').substring(0, 30)}")`;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    async function simulateComment() {
+      const postId = document.getElementById('simulatePostSelect').value;
+      const messageText = document.getElementById('simulateCommentInput').value.trim();
+      const resDiv = document.getElementById('simulateCommentResult');
+
+      if (!messageText) {
+        alert('Please enter a test comment message to simulate');
+        return;
+      }
+
+      resDiv.style.display = 'block';
+      resDiv.innerHTML = '<em>Evaluating rules...</em>';
+
+      try {
+        const res = await fetch('/api/comments/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, messageText })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          resDiv.innerHTML = `<span style="color:var(--danger);">Error: ${data.error || 'Failed to simulate'}</span>`;
+          return;
+        }
+
+        if (!data.matched) {
+          resDiv.innerHTML = `
+            <div style="font-weight:700; color:var(--warning); margin-bottom:0.25rem;">⚠️ No Rule Triggered</div>
+            <div style="font-size:0.9rem; color:var(--text-muted);">${data.reason}</div>
+          `;
+          return;
+        }
+
+        resDiv.innerHTML = `
+          <div style="font-weight:700; color:var(--success); margin-bottom:0.5rem;">✅ Automation Match Successful (${data.ruleLevel.toUpperCase()})</div>
+          <div style="display:grid; grid-template-columns: 140px 1fr; gap:0.35rem; font-size:0.9rem;">
+            <strong>Target Post:</strong> <code>${data.targetPostId}</code>
+            <strong>Keyword Check:</strong> <span>${data.keywordMatched}</span>
+            <strong>Auto-Like:</strong> <span>${data.autoLike ? '❤️ Yes (Will like comment)' : 'No'}</span>
+            <strong>Public Reply:</strong> <span>"${data.publicReply}"</span>
+            <strong>Private DM:</strong> <span>"${data.messengerReply}"</span>
+          </div>
+        `;
+      } catch (err) {
+        resDiv.innerHTML = `<span style="color:var(--danger);">Network error: ${err.message}</span>`;
+      }
+    }
+
+    async function dispatchMockWebhook() {
+      const postId = document.getElementById('simulatePostSelect').value;
+      const messageText = document.getElementById('simulateCommentInput').value.trim() || 'Test comment dispatched from dashboard';
+      const commentId = document.getElementById('realCommentIdInput').value.trim() || undefined;
+      const resDiv = document.getElementById('simulateCommentResult');
+
+      resDiv.style.display = 'block';
+      resDiv.innerHTML = commentId ? '<em>Dispatching real Facebook comment event to server...</em>' : '<em>Dispatching webhook event to server...</em>';
+
+      try {
+        const res = await fetch('/api/comments/test-webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, messageText, commentId })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          resDiv.innerHTML = `<span style="color:var(--danger);">Failed: ${data.error || 'Unknown error'}</span>`;
+          return;
+        }
+
+        const evt = data.event;
+        resDiv.innerHTML = `
+          <div style="font-weight:700; color:var(--success); margin-bottom:0.35rem;">⚡ Webhook Event Dispatched &amp; Processed!</div>
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">Event ID: <code>${evt?._id || 'logged'}</code> &bull; Status: <span class="badge ${evt?.status === 'processed' ? 'badge-connected' : 'badge-warning'}">${evt?.status || 'recorded'}</span></div>
+          <div style="background:white; padding:0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-light); font-size:0.85rem;">
+            <strong>Actions Logged:</strong>
+            <ul style="margin:0.25rem 0 0 1.25rem;">
+              ${(evt?.actionsTaken || ['Event received']).map(a => `<li>${a}</li>`).join('')}
+            </ul>
+          </div>
+          <div style="margin-top:0.5rem; font-size:0.85rem;">
+            👉 View full real-time event log on the <a href="/dashboard.html">Dashboard Live Stream</a>.
+          </div>
+        `;
+      } catch (err) {
+        resDiv.innerHTML = `<span style="color:var(--danger);">Network error: ${err.message}</span>`;
+      }
+    }
+
+    async function checkCommentPermissions() {
+      try {
+        const res = await fetch('/api/pages/permissions');
+        const data = await res.json();
+        const card = document.getElementById('permDiagCard');
+        if (!card) return;
+
+        if (!data.connected) {
+          card.style.display = 'none';
+          return;
+        }
+
+        if (data.missingCommentScopes && data.missingCommentScopes.length > 0) {
+          card.style.display = 'block';
+          card.style.borderLeftColor = 'var(--danger)';
+          document.getElementById('permDiagTitle').innerHTML = '⚠️ Page Token Missing Comment Scopes: ' + data.missingCommentScopes.join(', ');
+          document.getElementById('permDiagDesc').innerHTML = `
+            Meta strictly requires <strong>${data.missingCommentScopes.join(' and ')}</strong> to read comments and publish replies.<br>
+            Click below to re-authorize your Page using our updated direct OAuth flow with full permissions.
+          `;
+          document.getElementById('permDiagAction').innerHTML = '<a href="/index.html" class="btn btn-primary btn-sm">🔑 Re-authorize Facebook Page</a>';
+        } else {
+          card.style.display = 'block';
+          card.style.borderLeftColor = 'var(--success)';
+          document.getElementById('permDiagTitle').innerHTML = '✅ Comment Permissions Verified Active';
+          document.getElementById('permDiagDesc').innerHTML = 'Your connected Facebook Page token has all permissions (<code>pages_manage_engagement</code> and <code>pages_read_engagement</code>).';
+          document.getElementById('permDiagAction').innerHTML = '<span class="badge badge-connected">All Scopes Active</span>';
+        }
+      } catch (e) {
+        console.warn('Error checking permissions:', e);
+      }
+    }
+
+    async function syncFacebookCommentsNow() {
+      const btn = document.getElementById('syncCommentsBtn');
+      const banner = document.getElementById('syncResultBanner');
+      const originalText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = '🔄 Scanning Facebook Comments...';
+      if (banner) {
+        banner.style.display = 'block';
+        banner.style.background = '#e0f2fe';
+        banner.style.color = '#0369a1';
+        banner.innerHTML = 'Connecting to Meta Graph API and scanning posts for new comments...';
+      }
+
+      try {
+        const res = await fetch('/api/comments/sync', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+          banner.style.background = '#dcfce7';
+          banner.style.color = '#15803d';
+          banner.innerHTML = `✅ <strong>Sync Complete:</strong> ${data.message || `Processed ${data.processedCount || 0} new comments.`}`;
+          if (data.processedCount > 0) {
+            loadSavedAutomations();
+          }
+        } else {
+          banner.style.background = '#fee2e2';
+          banner.style.color = '#b91c1c';
+          banner.innerHTML = `⚠️ <strong>Sync Warning:</strong> ${data.error || data.message || 'Could not complete sync.'}`;
+        }
+      } catch (err) {
+        banner.style.background = '#fee2e2';
+        banner.style.color = '#b91c1c';
+        banner.innerHTML = `❌ <strong>Network Error:</strong> ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        setTimeout(() => {
+          if (banner) {
+            banner.style.display = 'none';
+          }
+        }, 8000);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadGlobalSettings();
+      loadSavedAutomations();
+      checkCommentPermissions();
+    });
+  </script>
+</body>
+</html>

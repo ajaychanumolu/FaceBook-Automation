@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facebook Page Posting - Automation MVP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook Automation MVP
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/messenger.html" class="nav-link">Messenger</a>
+      <a href="/comments.html" class="nav-link">Comments</a>
+      <a href="/posts.html" class="nav-link active">Posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div id="alertBox" style="display: none;"></div>
+
+    <!-- Section 1: Publish Immediately -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">📢 Create Facebook Page Post</h1>
+        <span class="badge badge-info">Immediate Publish</span>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+        Publish content directly to your Facebook Page feed or photos via the Meta Graph API.
+      </p>
+
+      <form id="publishForm">
+        <div class="form-group">
+          <label for="publishMessage">Post Message / Caption *</label>
+          <textarea id="publishMessage" placeholder="What's on your mind? Type your post message here..." rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="publishPhotoUrl">Optional Image URL (Photo Post)</label>
+          <input type="url" id="publishPhotoUrl" placeholder="https://example.com/image.jpg (direct link to image)">
+          <div class="help-text">If provided, publishes as a photo post via <code>/{page-id}/photos</code>.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="publishLink">Optional Link Attachment</label>
+          <input type="url" id="publishLink" placeholder="https://yourwebsite.com">
+          <div class="help-text">Creates a clickable rich card preview on Facebook feed.</div>
+        </div>
+
+        <button type="submit" id="publishBtn" class="btn btn-primary">
+          🚀 Publish to Facebook Page
+        </button>
+      </form>
+    </div>
+
+    <!-- Section 2: Schedule a Post -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">⏰ Schedule a Post</h2>
+        <span class="badge badge-warning">node-cron Scheduler</span>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+        Pick a future date and time. Our background cron worker automatically checks every minute and publishes due posts.
+      </p>
+
+      <form id="scheduleForm">
+        <div class="form-group">
+          <label for="scheduleMessage">Post Message / Caption *</label>
+          <textarea id="scheduleMessage" placeholder="Content of the scheduled post..." rows="3" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="schedulePhotoUrl">Optional Image URL</label>
+          <input type="url" id="schedulePhotoUrl" placeholder="https://example.com/image.jpg">
+        </div>
+
+        <div class="form-group">
+          <label for="scheduleTime">Date and Time *</label>
+          <input type="datetime-local" id="scheduleTime" required>
+          <div class="help-text">Select a time in the future.</div>
+        </div>
+
+        <button type="submit" id="scheduleBtn" class="btn btn-success">
+          📅 Schedule Post
+        </button>
+      </form>
+    </div>
+
+    <!-- Section 3: Scheduled Posts List -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Scheduled Posts Queue</h2>
+        <button class="btn btn-secondary btn-sm" onclick="loadScheduledPosts()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Message</th>
+              <th>Photo</th>
+              <th>Scheduled Time</th>
+              <th>Status</th>
+              <th>Meta Post ID / Error</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="scheduledPostsTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading scheduled posts...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+  </footer>
+
+  <script>
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.innerHTML = msg;
+      box.style.display = 'block';
+    }
+
+    // Set default datetime-local to 5 minutes from now
+    function setDefaultScheduleTime() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 5);
+      const localIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      document.getElementById('scheduleTime').value = localIso;
+    }
+
+    // Publish Immediately
+    document.getElementById('publishForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = document.getElementById('publishMessage').value.trim();
+      const photoUrl = document.getElementById('publishPhotoUrl').value.trim();
+      const link = document.getElementById('publishLink').value.trim();
+
+      if (!message) {
+        showAlert('Please enter a message to publish.', 'warning');
+        return;
+      }
+
+      showAlert('Publishing post to Facebook Page...', 'info');
+      const btn = document.getElementById('publishBtn');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/posts/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, photoUrl: photoUrl || undefined, link: link || undefined })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`Post published successfully! Meta Post ID: <code>${data.postId}</code>.`, 'success');
+          document.getElementById('publishMessage').value = '';
+          document.getElementById('publishPhotoUrl').value = '';
+          document.getElementById('publishLink').value = '';
+        } else {
+          const errDetail = data.error?.message || JSON.stringify(data.error);
+          showAlert(`<strong>Meta Publish Error:</strong> ${errDetail}`, 'danger');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Schedule Post
+    document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = document.getElementById('scheduleMessage').value.trim();
+      const photoUrl = document.getElementById('schedulePhotoUrl').value.trim();
+      const scheduledTime = document.getElementById('scheduleTime').value;
+
+      if (!message || !scheduledTime) {
+        showAlert('Message and Scheduled Time are both required.', 'warning');
+        return;
+      }
+
+      showAlert('Scheduling post...', 'info');
+      const btn = document.getElementById('scheduleBtn');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/posts/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, photoUrl: photoUrl || undefined, scheduledTime })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert(data.message, 'success');
+          document.getElementById('scheduleMessage').value = '';
+          document.getElementById('schedulePhotoUrl').value = '';
+          setDefaultScheduleTime();
+          loadScheduledPosts();
+        } else {
+          showAlert('Failed to schedule: ' + (data.error || 'Unknown error'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Load Scheduled Posts
+    async function loadScheduledPosts() {
+      try {
+        const res = await fetch('/api/posts/scheduled');
+        const data = await res.json();
+        const tbody = document.getElementById('scheduledPostsTableBody');
+        tbody.innerHTML = '';
+
+        if (!data.posts || data.posts.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No scheduled posts in queue.</td></tr>';
+          return;
+        }
+
+        data.posts.forEach(p => {
+          const tr = document.createElement('tr');
+          const time = new Date(p.scheduledTime).toLocaleString();
+
+          let statusBadge = 'badge-warning';
+          if (p.status === 'published') statusBadge = 'badge-connected';
+          if (p.status === 'failed') statusBadge = 'badge-disconnected';
+
+          const photoCell = p.photoUrl
+            ? `<a href="${p.photoUrl}" target="_blank" class="tag-badge">📷 Photo</a>`
+            : '<span style="color:var(--text-muted); font-size:0.8rem;">Text</span>';
+
+          const metaIdOrErr = p.metaPostId
+            ? `<code>${p.metaPostId}</code>`
+            : (p.error ? `<span style="color: var(--danger); font-size:0.8rem;">${p.error.message || 'Failed'}</span>` : '-');
+
+          tr.innerHTML = `
+            <td><strong>${p.message.substring(0, 45)}${p.message.length > 45 ? '...' : ''}</strong></td>
+            <td>${photoCell}</td>
+            <td><small>${time}</small></td>
+            <td><span class="badge ${statusBadge}">${p.status.toUpperCase()}</span></td>
+            <td><small>${metaIdOrErr}</small></td>
+            <td>
+              ${p.status === 'scheduled' ? `<button class="btn btn-danger btn-sm" onclick="deleteScheduledPost('${p._id}')">Cancel</button>` : `<button class="btn btn-secondary btn-sm" onclick="deleteScheduledPost('${p._id}')">Remove</button>`}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading scheduled posts:', err);
+      }
+    }
+
+    async function deleteScheduledPost(id) {
+      if (!confirm('Remove this post from queue?')) return;
+      await fetch(`/api/posts/scheduled/${id}`, { method: 'DELETE' });
+      loadScheduledPosts();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setDefaultScheduleTime();
+      loadScheduledPosts();
+    });
+  </script>
+</body>
+</html>

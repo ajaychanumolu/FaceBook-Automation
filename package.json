@@ -1,0 +1,27 @@
+{
+  "name": "facebook-page-automation-mvp",
+  "version": "1.0.0",
+  "description": "Facebook Page & Messenger Automation MVP with ngrok, Express and MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "tunnel": "ngrok http --url=operable-overbook-gravitate.ngrok-free.dev 3000"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5",
+    "node-cron": "^3.0.3"
+  },
+  "keywords": [
+    "facebook",
+    "meta",
+    "automation",
+    "messenger",
+    "comments"
+  ],
+  "author": "",
+  "license": "ISC"
+}

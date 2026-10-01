@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Facebook Page - Automation MVP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="nav-brand">
+      <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Facebook Automation MVP
+    </a>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/messenger.html" class="nav-link">Messenger</a>
+      <a href="/comments.html" class="nav-link">Comments</a>
+      <a href="/posts.html" class="nav-link">Posts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Status Banner if Already Connected -->
+    <div id="connectionStatusCard" class="card" style="display: none;">
+      <div class="card-header">
+        <h2 class="card-title">Currently Connected Page</h2>
+        <span class="badge badge-connected" id="statusBadge">Connected</span>
+      </div>
+      <p style="margin-bottom: 0.5rem;"><strong>Page Name:</strong> <span id="currentConnectedName">-</span></p>
+      <p style="margin-bottom: 0.5rem;"><strong>Page ID:</strong> <span id="currentConnectedId">-</span></p>
+      <p style="margin-bottom: 1rem;"><strong>Webhook Status:</strong> <span id="currentWebhookStatus">-</span></p>
+      <div class="btn-group">
+        <a href="/dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+        <button id="disconnectBtn" class="btn btn-danger btn-sm">Disconnect Page</button>
+      </div>
+    </div>
+
+    <!-- Connect Card -->
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Connect Facebook Page</h1>
+        <span class="badge badge-info">1 Page MVP</span>
+      </div>
+      <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+        Authorize your Meta Developer Account to connect your Facebook Page for Messenger auto-replies, post comment automation, and publishing.
+      </p>
+
+      <!-- Feedback Messages -->
+      <div id="alertBox" style="display: none;"></div>
+
+      <!-- Connection Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('embeddedTab')">Embedded Signup (Meta Login)</button>
+        <button class="tab-btn" onclick="switchTab('directTab')">Direct Page Token (Fallback / Fast Dev)</button>
+      </div>
+
+      <!-- Tab 1: Embedded Signup / FB Login -->
+      <div id="embeddedTab" class="tab-pane active">
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+          <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+            Uses your configured Meta App ID: <code id="displayAppId">...</code> and Configuration ID: <code id="displayConfigId">...</code>.
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Ensure this browser origin matches your Meta App's Allowed Domains (or ngrok HTTPS domain).
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-direction: column;">
+          <a href="/auth/facebook" class="btn btn-primary btn-block" style="font-size: 1.05rem; padding: 0.85rem; background-color: #1877f2; text-align: center; text-decoration: none;">
+            <svg style="width: 20px; height: 20px; fill: white; margin-right: 6px; vertical-align: middle;" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Connect Facebook (Direct OAuth Flow - Recommended)
+          </a>
+
+          <button id="fbLoginBtn" class="btn btn-secondary btn-block" style="font-size: 0.95rem; padding: 0.75rem;">
+            Or Connect via Popup with Embedded Signup (Config ID)
+          </button>
+        </div>
+
+        <div id="pageSelectionSection" style="display: none; margin-top: 1.5rem;">
+          <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem;">Select Your Facebook Page:</h3>
+          <div id="pagesListContainer"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Direct Token Input -->
+      <div id="directTab" class="tab-pane">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+          If you generated a Page Access Token directly via the Meta Graph API Explorer or Developer Portal, you can connect immediately without domain restrictions:
+        </p>
+
+        <div class="form-group">
+          <label for="directPageId">Facebook Page ID *</label>
+          <input type="text" id="directPageId" placeholder="e.g. 102938475610293">
+        </div>
+
+        <div class="form-group">
+          <label for="directPageName">Facebook Page Name</label>
+          <input type="text" id="directPageName" placeholder="e.g. My Test Page">
+        </div>
+
+        <div class="form-group">
+          <label for="directPageToken">Page Access Token *</label>
+          <textarea id="directPageToken" placeholder="Paste your EAAG... Page Access Token here" rows="3"></textarea>
+          <span class="help-text">Must have permissions: pages_show_list, pages_read_engagement, pages_manage_posts, pages_messaging, pages_manage_metadata, pages_manage_engagement.</span>
+        </div>
+
+        <button id="directConnectBtn" class="btn btn-success btn-block">Connect with Page Token</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+  </footer>
+
+  <!-- Facebook JavaScript SDK -->
+  <div id="fb-root"></div>
+  <script>
+    let metaConfig = { appId: '', configId: '', version: 'v26.0' };
+    let retrievedUserToken = '';
+
+    // Switch tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Show alert banner
+    function showAlert(msg, type = 'info') {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.innerHTML = msg;
+      box.style.display = 'block';
+    }
+
+    // Check currently connected page
+    async function loadCurrentPage() {
+      try {
+        const res = await fetch('/api/pages/current');
+        const data = await res.json();
+        if (data.connected && data.page) {
+          document.getElementById('connectionStatusCard').style.display = 'block';
+          document.getElementById('currentConnectedName').textContent = data.page.pageName;
+          document.getElementById('currentConnectedId').textContent = data.page.pageId;
+          document.getElementById('currentWebhookStatus').innerHTML = data.page.webhookSubscribed
+            ? '<span class="badge badge-connected">Subscribed</span>'
+            : `<span class="badge badge-warning">Pending (${data.page.webhookError || 'Not Subscribed'})</span>`;
+        } else {
+          document.getElementById('connectionStatusCard').style.display = 'none';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Initialize Meta config and JS SDK
+    async function initFacebook() {
+      try {
+        const res = await fetch('/api/pages/config');
+        metaConfig = await res.json();
+
+        document.getElementById('displayAppId').textContent = metaConfig.appId;
+        document.getElementById('displayConfigId').textContent = metaConfig.configId;
+
+        window.fbAsyncInit = function() {
+          FB.init({
+            appId: metaConfig.appId,
+            cookie: true,
+            xfbml: true,
+            version: metaConfig.version || 'v26.0'
+          });
+        };
+
+        (function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) return;
+          js = d.createElement(s); js.id = id;
+          js.src = "https://connect.facebook.net/en_US/sdk.js";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+      } catch (err) {
+        showAlert('Could not load Meta configuration: ' + err.message, 'danger');
+      }
+    }
+
+    // 1. Connect via FB.login with Config ID
+    document.getElementById('fbLoginBtn').addEventListener('click', () => {
+      triggerFbLogin(true);
+    });
+
+
+
+    function triggerFbLogin(useConfigId) {
+      showAlert('Opening Facebook authorization dialog...', 'info');
+
+      if (typeof FB === 'undefined') {
+        showAlert('Facebook JS SDK is still loading or blocked. Please use the "Connect Facebook" button above (Direct OAuth) or the Direct Token tab.', 'danger');
+        return;
+      }
+
+      const loginOptions = {
+        return_scopes: true,
+        auth_type: 'rerequest'
+      };
+
+      if (useConfigId && metaConfig.configId) {
+        // config_id and scope are MUTUALLY EXCLUSIVE — do NOT set scope when using config_id
+        loginOptions.config_id = metaConfig.configId;
+        loginOptions.response_type = 'code';
+        loginOptions.override_default_response_type = true;
+      } else {
+        // Standard login: use scope directly
+        loginOptions.scope = 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging,pages_manage_engagement';
+      }
+
+      FB.login(function(response) {
+        console.log('[FB.login response]:', response);
+
+        if (response.authResponse) {
+          const auth = response.authResponse;
+          const code = auth.code;
+          const accessToken = auth.accessToken;
+
+          fetchPagesFromBackend(code, accessToken);
+        } else {
+          showAlert('Facebook authorization was cancelled or not completed.', 'warning');
+        }
+      }, loginOptions);
+    }
+
+    // Send code or token to backend to get available pages
+    async function fetchPagesFromBackend(code, accessToken) {
+      showAlert('Fetching your Facebook Pages from Meta...', 'info');
+      try {
+        const res = await fetch('/api/pages/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: code || undefined,
+            userAccessToken: accessToken || undefined,
+            redirectUri: window.location.href.split('?')[0].split('#')[0]
+          })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          const errDetail = data.error?.message || JSON.stringify(data.error);
+          showAlert(`<strong>Meta Error:</strong> ${errDetail}`, 'danger');
+          return;
+        }
+
+        retrievedUserToken = data.userAccessToken;
+        renderAvailablePages(data.pages);
+      } catch (err) {
+        showAlert('Network error communicating with backend: ' + err.message, 'danger');
+      }
+    }
+
+    // Render list of available pages
+    function renderAvailablePages(pages) {
+      const container = document.getElementById('pagesListContainer');
+      const section = document.getElementById('pageSelectionSection');
+      container.innerHTML = '';
+
+      if (!pages || pages.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">No Facebook Pages found for this account. Ensure your account is Admin or Manager of at least one Page.</div>';
+        section.style.display = 'block';
+        return;
+      }
+
+      pages.forEach(p => {
+        const div = document.createElement('div');
+        div.style = 'background: white; border: 1px solid var(--border-light); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;';
+        div.innerHTML = `
+          <div>
+            <div style="font-weight: 700; font-size: 1.05rem;">${p.name}</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Page ID: <code>${p.id}</code> &bull; Category: ${p.category || 'General'}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick='selectPage(${JSON.stringify(p).replace(/'/g, "&apos;")})'>Connect This Page</button>
+        `;
+        container.appendChild(div);
+      });
+
+      section.style.display = 'block';
+      showAlert(`Found ${pages.length} Facebook Page(s). Select the Page you wish to connect below.`, 'success');
+    }
+
+    // Save selected Page in DB
+    async function selectPage(page) {
+      showAlert(`Connecting Page <strong>${page.name}</strong> and subscribing to webhooks...`, 'info');
+      try {
+        const res = await fetch('/api/pages/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pageId: page.id,
+            pageName: page.name,
+            pageAccessToken: page.access_token,
+            userAccessToken: retrievedUserToken,
+            category: page.category,
+            tasks: page.tasks
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`Page <strong>${data.page.pageName}</strong> connected successfully! Redirecting to Dashboard...`, 'success');
+          setTimeout(() => {
+            window.location.href = '/dashboard.html';
+          }, 1200);
+        } else {
+          showAlert('Failed to connect page: ' + (data.error?.message || JSON.stringify(data.error)), 'danger');
+        }
+      } catch (err) {
+        showAlert('Error connecting page: ' + err.message, 'danger');
+      }
+    }
+
+    // Direct Token Connect
+    document.getElementById('directConnectBtn').addEventListener('click', async () => {
+      const pageId = document.getElementById('directPageId').value.trim();
+      const pageName = document.getElementById('directPageName').value.trim();
+      const pageAccessToken = document.getElementById('directPageToken').value.trim();
+
+      if (!pageId || !pageAccessToken) {
+        showAlert('Page ID and Page Access Token are both required.', 'warning');
+        return;
+      }
+
+      showAlert('Connecting Page with supplied token...', 'info');
+      try {
+        const res = await fetch('/api/pages/direct-connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pageId, pageName, pageAccessToken })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showAlert(`Page <strong>${data.page.pageName}</strong> connected successfully! Redirecting to Dashboard...`, 'success');
+          setTimeout(() => {
+            window.location.href = '/dashboard.html';
+          }, 1200);
+        } else {
+          showAlert('Error: ' + (data.error || 'Failed to connect'), 'danger');
+        }
+      } catch (err) {
+        showAlert('Network error: ' + err.message, 'danger');
+      }
+    });
+
+    // Disconnect Page
+    document.getElementById('disconnectBtn').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to disconnect this Page?')) return;
+      await fetch('/api/pages/disconnect', { method: 'POST' });
+      showAlert('Page disconnected.', 'info');
+      loadCurrentPage();
+    });
+
+    // On Load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadCurrentPage();
+      initFacebook();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorMsg = urlParams.get('error');
+      const tokenParam = urlParams.get('token');
+
+      if (errorMsg) {
+        showAlert(`<strong>OAuth Error:</strong> ${decodeURIComponent(errorMsg)}`, 'danger');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (tokenParam) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        retrievedUserToken = tokenParam;
+        showAlert('Authorization successful! Retrieving your Facebook Pages...', 'info');
+        fetch('/api/pages/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userAccessToken: tokenParam })
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              renderAvailablePages(data.pages);
+            } else {
+              showAlert('Error fetching pages: ' + (data.error?.message || JSON.stringify(data.error)), 'danger');
+            }
+          })
+          .catch(e => showAlert('Network error: ' + e.message, 'danger'));
+      }
+    });
+  </script>
+</body>
+</html>
