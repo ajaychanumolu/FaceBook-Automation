@@ -20,7 +20,7 @@ The **Facebook Automation MVP** is an automated marketing, engagement, and custo
 1. **Instant Messenger DMs**: Direct replies to Facebook Messenger messages based on keyword matching (exact/contains) or generic fallback greeting.
 2. **Post-Specific & Global Comment Automation**:
    - Automatically likes incoming user comments.
-   - Automatically posts threaded public replies under comments.
+   - Automatically posts threaded public replies under comments.        
    - Automatically sends private Messenger DMs to commenters via Meta's **Private Replies API**.
    - Supports rule-based keyword matching or global Page-wide defaults.
 3. **Scheduled Post Publisher**: A background cron worker that schedules and auto-publishes text, photo, and link posts to Facebook feeds at specified future timestamps.
@@ -347,7 +347,6 @@ To enable public users to connect their Pages:
   - Expanding this codebase to support Instagram requires minimal additions using the existing architecture!
 
 ---
-
 ## 8. Summary & Next Steps
 
 You now possess a completely functional, end-to-end Facebook automation platform with:
