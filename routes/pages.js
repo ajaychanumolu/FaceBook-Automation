@@ -7,11 +7,19 @@ const metaService = require('../services/meta');
  * GET /api/pages/config - Return client Meta credentials for JS SDK
  */
 router.get('/config', (req, res) => {
+  const host = (req.headers['x-forwarded-host'] || req.get('host') || '').toLowerCase();
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  let baseUrl = process.env.BASE_URL || '';
+  if (host && (host.includes('oneinfo.ai') || host.includes('localhost') || host.includes('render.com'))) {
+    baseUrl = `${protocol}://${host}`;
+  } else if (baseUrl) {
+    baseUrl = baseUrl.replace(/oneingo\.ai/gi, 'oneinfo.ai');
+  }
   res.json({
     appId: process.env.META_APP_ID || '',
     configId: process.env.META_CONFIG_ID || '',
     version: process.env.META_GRAPH_API_VERSION || 'v26.0',
-    baseUrl: process.env.BASE_URL || ''
+    baseUrl: baseUrl
   });
 });
 

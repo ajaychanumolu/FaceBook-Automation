@@ -49,12 +49,20 @@ app.use('/api/events', eventsRoutes);
 
 // Helper: Build the EXACT redirect_uri for OAuth dialog and token exchange
 function buildRedirectUri(req) {
-  if (process.env.BASE_URL) {
-    return `${process.env.BASE_URL.replace(/\/$/, '')}/auth/callback`;
+  const host = (req.headers['x-forwarded-host'] || req.get('host') || '').toLowerCase();
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+
+  // If request arrives on a recognized host, use that host directly
+  if (host && (host.includes('oneinfo.ai') || host.includes('localhost') || host.includes('render.com'))) {
+    return `${protocol}://${host}/auth/callback`;
   }
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const host = req.headers['x-forwarded-host'] || req.get('host');
-  return `${protocol}://${host}/auth/callback`;
+
+  if (process.env.BASE_URL) {
+    const cleanBase = process.env.BASE_URL.replace(/oneingo\.ai/gi, 'oneinfo.ai').replace(/\/$/, '');
+    return `${cleanBase}/auth/callback`;
+  }
+
+  return `${protocol}://${host || 'facebook.oneinfo.ai'}/auth/callback`;
 }
 
 // Server-side OAuth redirect flow
@@ -299,17 +307,18 @@ async function connectDatabase() {
 
 // Render Free Tier Keep-Alive Worker (pings public endpoint every 12 minutes to prevent spin-down)
 function startKeepAliveWorker() {
-  const baseUrl = process.env.BASE_URL;
-  if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+  const rawBase = process.env.BASE_URL;
+  if (!rawBase || rawBase.includes('localhost') || rawBase.includes('127.0.0.1')) {
     return;
   }
+  const baseUrl = rawBase.replace(/oneingo\.ai/gi, 'oneinfo.ai').replace(/\/$/, '');
 
   const pingIntervalMs = 12 * 60 * 1000; // 12 minutes (Render sleeps after 15m)
   console.log(`[Keep-Alive] Initializing Render Free Tier keep-alive worker (Interval: 12m, Target: ${baseUrl}/health)`);
 
   setInterval(async () => {
     try {
-      const pingUrl = `${baseUrl.replace(/\/$/, '')}/health`;
+      const pingUrl = `${baseUrl}/health`;
       const res = await fetch(pingUrl, {
         headers: { 'User-Agent': 'RenderKeepAliveWorker/1.0' }
       });
