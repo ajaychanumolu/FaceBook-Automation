@@ -1,0 +1,22 @@
+name: Render Free Tier Keep-Alive
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render Free tier from sleeping (sleeps after 15m of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Endpoint to Prevent Sleep
+        run: |
+          echo "Pinging https://facebook.oneingo.ai/health..."
+          STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" https://facebook.oneingo.ai/health || true)
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
+            echo "✅ Render instance is active, warm, and ready for Meta webhooks!"
+          else
+            echo "⚠️ Health check returned status $STATUS (or instance was cold and is waking up)"
+          fi

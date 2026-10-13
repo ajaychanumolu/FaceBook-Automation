@@ -297,10 +297,38 @@ async function connectDatabase() {
   }
 }
 
+// Render Free Tier Keep-Alive Worker (pings public endpoint every 12 minutes to prevent spin-down)
+function startKeepAliveWorker() {
+  const baseUrl = process.env.BASE_URL;
+  if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+    return;
+  }
+
+  const pingIntervalMs = 12 * 60 * 1000; // 12 minutes (Render sleeps after 15m)
+  console.log(`[Keep-Alive] Initializing Render Free Tier keep-alive worker (Interval: 12m, Target: ${baseUrl}/health)`);
+
+  setInterval(async () => {
+    try {
+      const pingUrl = `${baseUrl.replace(/\/$/, '')}/health`;
+      const res = await fetch(pingUrl, {
+        headers: { 'User-Agent': 'RenderKeepAliveWorker/1.0' }
+      });
+      if (res.ok) {
+        console.log(`[Keep-Alive] ✅ Keep-alive ping successful (${res.status} OK) at ${new Date().toLocaleTimeString()}`);
+      } else {
+        console.warn(`[Keep-Alive] ⚠️ Keep-alive ping returned status ${res.status}`);
+      }
+    } catch (err) {
+      console.warn(`[Keep-Alive] Notice: Ping attempt failed (${err.message})`);
+    }
+  }, pingIntervalMs);
+}
+
 // Start Server
 function startServer() {
   connectDatabase();
   commentPoller.startPoller(25000);
+  startKeepAliveWorker();
 
   app.listen(PORT, () => {
     console.log('====================================================');
