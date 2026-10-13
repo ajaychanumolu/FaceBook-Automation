@@ -28,7 +28,10 @@
     <div class="card">
       <div class="card-header">
         <h1 class="card-title">💬 Messenger Auto-Reply Automation</h1>
-        <span id="messengerStatusBadge" class="badge badge-disconnected">OFF</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span class="badge badge-info" title="Required Meta Permission">Scope: pages_messaging</span>
+          <span id="messengerStatusBadge" class="badge badge-disconnected">OFF</span>
+        </div>
       </div>
       <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
         When someone messages your Facebook Page, your server automatically matches keywords or sends your fallback reply via Meta Send API.
@@ -143,7 +146,7 @@
       </div>
       <ol style="margin-left: 1.5rem; color: var(--text-main); font-size: 0.95rem; line-height: 1.8;">
         <li>Make sure your Facebook Page is connected on the <a href="/index.html">Connect page</a>.</li>
-        <li>Ensure your server is live and ngrok is active (<code>ngrok http 3000</code>).</li>
+        <li>Ensure your server is deployed and live (e.g. on Render with <code>https://facebook.oneingo.ai</code>).</li>
         <li>In Meta App Dashboard, ensure the Webhook field <code>messages</code> is subscribed.</li>
         <li>While in <strong>Development Mode</strong>, send test messages from a Facebook account with an <strong>App Role</strong> (e.g. Tester <code>Ajay Ch</code>).</li>
         <li>The bot will reply immediately within 1-2 seconds! Inspect live logs on the <a href="/dashboard.html">Dashboard</a>.</li>

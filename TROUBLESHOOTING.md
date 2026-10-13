@@ -1,164 +1,122 @@
-# 🛠️ Facebook Automation MVP - Troubleshooting & Daily Startup Guide
+# 🛠️ Facebook Automation MVP - Troubleshooting & Daily Operations Guide
 
-This document is your **cheat sheet** if you face any issues starting or running this project tomorrow or in the future.
+This document is your **cheat sheet** for operating the project in production on **Render** (`https://facebook.oneingo.ai`) or locally.
 
 ---
 
-## ⚡ Daily Startup Checklist (How to Run Tomorrow)
+## ⚡ Production Overview (`https://facebook.oneingo.ai`)
 
-Every time you restart your computer or start a new day:
+When running on Render with your custom domain:
+- **Application URL**: `https://facebook.oneingo.ai`
+- **Dashboard**: `https://facebook.oneingo.ai/dashboard.html`
+- **Webhook Endpoint**: `https://facebook.oneingo.ai/webhook`
+- **Health Check**: `https://facebook.oneingo.ai/health`
+- **No local terminal or ngrok required**: Render keeps your Node.js application running 24/7 in the cloud.
 
-### Step 1: Open Terminal 1 — Start the Server
+---
+
+## 💻 Local Development (Optional Fallback)
+
+If developing new features locally on your PC:
+
+### Step 1: Start the Local Server
 ```powershell
 npm run dev
 ```
-*(Runs at `http://localhost:3000`)*
+*(Accessible at `http://localhost:3000`)*
 
-### Step 2: Open Terminal 2 — Start the ngrok Tunnel
+### Step 2: (Optional) Start ngrok Tunnel (Only if not using Render)
 ```powershell
 npm run tunnel
 ```
-*(Exposes `http://localhost:3000` to `https://operable-overbook-gravitate.ngrok-free.dev`)*
-
-### Step 3: Open the Dashboard in Your Browser
-Go to: **[http://localhost:3000/dashboard.html](http://localhost:3000/dashboard.html)**
-Check that all 4 diagnostics checks are **GREEN**:
-- [x] MongoDB Atlas Connection: **CONNECTED**
-- [x] Public ngrok Webhook Tunnel: **ONLINE**
-- [x] Meta Developer App: **CONFIGURED**
-- [x] Facebook Page: **CONNECTED**
 
 ---
 
-## 🚨 Top 7 Potential Errors & Exact Fixes
+## 🚨 Top Potential Errors & Exact Fixes
 
 ---
 
-### Error 1: Port 3000 Already in Use (`EADDRINUSE: address already in use :::3000`)
-**Why this happens:** A previous Node.js server process was left running in the background.
+### Error 1: Meta Webhook Handshake Fails (`The URL could not be validated`)
+**Why this happens:** Meta attempted to verify the webhook, but could not reach the server or verify token.
 
-**How to Fix (Run in PowerShell):**
-```powershell
-# Stop all lingering Node.js processes immediately:
-Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
-```
-Then run `npm run dev` again.
+**How to Fix:**
+1. Test your production endpoint directly: Open `https://facebook.oneingo.ai/health` in your browser. It should return status `ok`.
+2. Test the handshake locally or on production: Open `https://facebook.oneingo.ai/dashboard.html` and click **🧪 Ping Webhook Verification**.
+3. Verify Meta Webhook Settings:
+   - **Callback URL**: `https://facebook.oneingo.ai/webhook`
+   - **Verify Token**: `fb_mvp_verify_token_2026`
+4. Click **Verify and Save** in the Meta Developer Portal.
 
 ---
 
-### Error 2: MongoDB Atlas IP Whitelist Block (`Could not connect to any servers in your MongoDB Atlas cluster`)
-**Why this happens:** If your home or mobile Wi-Fi IP address changes (very common with dynamic IPs), MongoDB Atlas blocks incoming connections.
+### Error 2: Render Custom Domain Not Loading or SSL Pending
+**Why this happens:** DNS CNAME record has not propagated yet or points to the wrong target.
+
+**How to Fix:**
+1. In your DNS provider (e.g., Cloudflare, GoDaddy, Namecheap) for `oneingo.ai`:
+   - Check that the CNAME for `facebook` points to your Render service target (e.g., `<service-name>.onrender.com`).
+   - If using Cloudflare, temporarily set the Proxy status to **DNS Only (Grey Cloud)** during initial certificate issuance, or ensure SSL is set to **Full**.
+2. In Render Dashboard > **Settings** > **Custom Domains**, click **Refresh** on `facebook.oneingo.ai`.
+3. Once Verified, Render's Let's Encrypt certificate will be active.
+
+---
+
+### Error 3: MongoDB Atlas IP Whitelist Block (`Could not connect to any servers in your cluster`)
+**Why this happens:** Render cloud servers use dynamic outbound IPs. MongoDB Atlas requires network access from anywhere (`0.0.0.0/0`) or specific peered IPs.
 
 **How to Fix:**
 1. Open [MongoDB Atlas](https://cloud.mongodb.com/).
 2. In the left menu under **Security**, click **Network Access**.
-3. If your current IP is not listed:
-   - Click **+ Add IP Address**.
-   - Select **Allow Access From Anywhere** (`0.0.0.0/0`) for development, or click **Add Current IP Address**.
-   - Click **Confirm**.
-4. Within 1 minute, your running server will automatically detect the connection and show:
-   `[Database] ✅ MongoDB connected successfully on retry!`.
+3. Click **+ Add IP Address**.
+4. Select **Allow Access From Anywhere** (`0.0.0.0/0`).
+5. Click **Confirm**. Your server on Render will automatically connect within 15 seconds!
 
 ---
 
-### Error 3: ngrok Tunnel Error or URL Changed
-**Why this happens:** If you ran `ngrok http 3000` without your reserved domain, or if ngrok generated a random new URL.
-
-**How to Fix:**
-1. Always run using our configured script:
-   ```powershell
-   npm run tunnel
-   ```
-   *(This forces your domain: `operable-overbook-gravitate.ngrok-free.dev`)*.
-2. If your ngrok domain **ever permanently changes** in the future:
-   - Update `BASE_URL=https://new-url.ngrok-free.dev` in [.env](file:///c:/Users/PC/Desktop/facebook_automation_mvp/.env).
-   - Update **App Domains** and **Valid OAuth Redirect URIs** in Meta App Settings.
-   - Update **Webhooks Callback URL** in Meta Developer Portal to: `https://new-url.ngrok-free.dev/webhook`.
-
----
-
-### Error 4: Meta Access Token Expired (`Error validating access token: Session has expired` or Code `190`)
-**Why this happens:** Meta Page tokens or User tokens can expire after password changes or when token lifetimes elapse.
-
-**How to Fix:**
-1. Open [http://localhost:3000/index.html](http://localhost:3000/index.html).
-2. Click **Connect Facebook (Direct OAuth Flow)** to log in and re-authorize.
-3. Select your Page; the server automatically saves the fresh Page Access Token and re-subscribes webhooks.
-4. Alternatively, generate a fresh Page Token in [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/) and paste it into the **Direct Page Token** tab on `/index.html`.
-
----
-
-### Error 5: Messenger Messages Sent, But Bot Does NOT Reply
+### Error 4: Messenger Messages Sent, But Bot Does NOT Reply
 **Check these 4 items in order:**
 
 1. **Is the sender an App Tester? (CRITICAL in Development Mode)**
-   - Meta **strictly blocks** regular public Facebook accounts from triggering bots while the Meta App is in Development Mode.
-   - The sender MUST be an Administrator, Developer, or Tester in your Meta App.
-   - Go to **Meta Dashboard > App Roles > Roles** and verify the tester account (e.g., `Ajay Ch`) is listed and has accepted the invitation.
+   - While the Meta App is in Development Mode, Meta **strictly blocks** regular Facebook users from interacting with the bot.
+   - The sender must be added under **Meta Dashboard > App Roles > Roles** as a Tester, Developer, or Admin (e.g., `Ajay Ch`), and must accept the invite at [developers.facebook.com/requests](https://developers.facebook.com/requests).
 2. **Is Messenger Auto-Reply turned ON?**
-   - Open [http://localhost:3000/messenger.html](http://localhost:3000/messenger.html) and verify the toggle switch is **ON**.
+   - Open `https://facebook.oneingo.ai/messenger.html` and verify the toggle switch is **ON**.
 3. **Is the Webhook `messages` field subscribed?**
    - In Meta Developer Portal > **Webhooks > Page**, ensure `messages` and `messaging_postbacks` have **Subscribed** checked.
 4. **Is the Page subscribed to the App?**
-   - Open [http://localhost:3000/dashboard.html](http://localhost:3000/dashboard.html) and click **🔄 Re-subscribe Page Webhooks**.
+   - Open `https://facebook.oneingo.ai/dashboard.html` and click **🔄 Re-subscribe Page Webhooks**.
 
 ---
 
-### Error 6: Post Comments Not Triggering Auto-Replies
-**Check these 5 items in order:**
+### Error 5: Post Comments Not Triggering Auto-Replies
+**Check these items in order:**
 
-1. **Does your Page Token have Comment Permissions? (CRITICAL)**
-   - Open [http://localhost:3000/comments.html](http://localhost:3000/comments.html).
-   - Check the **Comment Permissions Banner** at the top.
-   - Meta requires both **`pages_read_user_content`** and **`pages_manage_engagement`**.
-   - If missing, click **Re-authorize Facebook Page** on `/index.html` (which now requests these with `rerequest`).
+1. **Does your Page Token have Comment Permissions?**
+   - Both **`pages_manage_engagement`** and **`pages_read_engagement`** are required.
+   - Check the **Permissions Health** table on `https://facebook.oneingo.ai/dashboard.html` or `index.html`.
 2. **Is Comment Automation enabled?**
-   - Open [http://localhost:3000/comments.html](http://localhost:3000/comments.html).
-   - Make sure **Global Comment Auto-Reply** is toggled to **ON**, OR you have created an active rule for that specific Post ID.
-3. **Did the commenter use required keywords?**
-   - If you entered keywords in the keyword filter (e.g. `price, info`), comments without those words are ignored. Leave the keyword field blank to reply to **all comments**.
-4. **Is the `feed` Webhook field subscribed in Meta Developer Portal?**
-   - In Meta Developer Portal > **Webhooks > Page**, ensure `feed` has **Subscribed** checked with Callback URL:
-     `https://operable-overbook-gravitate.ngrok-free.dev/webhook`.
-5. **Is the commenter an App Tester? (In Development Mode)**
-   - Meta strictly blocks non-tester Facebook accounts from triggering webhooks while the App is in Development Mode. Make sure test comments are posted from your Tester account (e.g., `Ajay Ch`).
-6. **Test Instantly with the Live Comment Simulator:**
-   - Open [http://localhost:3000/comments.html](http://localhost:3000/comments.html).
-   - Under **🧪 Live Comment Simulator & Webhook Tester**, type a test comment and click **Test Rule Matching** or **Dispatch Mock Webhook Event** to verify your rule logic without needing Facebook.
+   - Open `https://facebook.oneingo.ai/comments.html`.
+   - Make sure **Global Comment Auto-Reply** is toggled to **ON**, OR you have created a rule for that specific Post ID.
+3. **Is the commenter an App Tester? (In Development Mode)**
+   - Post comments using your authorized Tester account.
+4. **Test Instantly with the Live Comment Simulator:**
+   - Open `https://facebook.oneingo.ai/comments.html`.
+   - Under **🧪 Live Comment Simulator & Webhook Tester**, test keyword matching and dispatch mock events.
 
 ---
 
-### Error 7: Meta Webhook Handshake Verification Fails (`The URL could not be validated`)
-**Why this happens:** Meta tried to reach your server, but could not connect or verify token.
+### Error 6: Meta Access Token Expired (Code `190`)
+**Why this happens:** Meta Page tokens or User tokens can expire after password changes or session lifetime limits.
 
 **How to Fix:**
-1. Check that ngrok is running and can be reached from your phone or external browser.
-2. Test the handshake locally by clicking **🧪 Ping Webhook Verification** on the [Dashboard](http://localhost:3000/dashboard.html).
-3. Ensure the **Verify Token** entered in Meta is exactly:
-   `fb_mvp_verify_token_2026`
-4. Ensure the **Callback URL** in Meta is exactly:
-   `https://operable-overbook-gravitate.ngrok-free.dev/webhook`
+1. Open `https://facebook.oneingo.ai/index.html`.
+2. Click **Connect Facebook (Direct OAuth Flow)** to log in and re-authorize.
+3. Select your Page; the server automatically updates the token and re-subscribes webhooks.
 
 ---
 
 ## 🔍 How to Inspect Live Webhook Payloads and Debug
 
-1. Open [http://localhost:3000/dashboard.html](http://localhost:3000/dashboard.html).
+1. Open `https://facebook.oneingo.ai/dashboard.html`.
 2. The **Live Webhooks & Events Stream** table displays every single event in real time.
-3. Click the **Inspect** button next to any event to view:
-   - Full raw JSON payload sent by Meta
-   - Exact API call result
-   - Exact Meta error code and message (if any error occurred)
-
----
-
-## 📞 Quick Reference Commands
-
-| Goal | Command |
-| :--- | :--- |
-| **Start Backend Server** | `npm run dev` |
-| **Start ngrok Tunnel** | `npm run tunnel` |
-| **Kill Port 3000 (if stuck)** | `Get-Process node \| Stop-Process -Force` |
-| **Check Port 3000 Status** | `Get-NetTCPConnection -LocalPort 3000` |
-| **Test Health Endpoint** | `curl http://localhost:3000/health` |
-| **View ngrok Web Dashboard** | Open `http://127.0.0.1:4040` in browser |
+3. Click the **Inspect** button next to any event to view the full raw payload received from Meta.

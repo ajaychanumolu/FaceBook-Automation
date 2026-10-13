@@ -10,7 +10,8 @@ router.get('/config', (req, res) => {
   res.json({
     appId: process.env.META_APP_ID || '',
     configId: process.env.META_CONFIG_ID || '',
-    version: process.env.META_GRAPH_API_VERSION || 'v26.0'
+    version: process.env.META_GRAPH_API_VERSION || 'v26.0',
+    baseUrl: process.env.BASE_URL || ''
   });
 });
 
@@ -81,6 +82,63 @@ router.get('/permissions', async (req, res) => {
     if (!hasCommentsRead) missingCommentScopes.push('pages_read_engagement');
     if (!hasCommentsManage) missingCommentScopes.push('pages_manage_engagement');
 
+    const requiredScopesConfig = [
+      {
+        scope: 'pages_show_list',
+        name: 'Show List of Pages',
+        feature: 'Page Selection & Discovery',
+        justification: 'Enables the user to view and choose which of their Facebook Pages to connect to the automation platform.',
+        required: true
+      },
+      {
+        scope: 'pages_messaging',
+        name: 'Send & Receive Messenger Messages',
+        feature: 'Messenger Keyword Auto-Reply Bot',
+        justification: 'Enables the application to listen for customer inquiries sent to the Page Messenger and deliver instant automated replies based on configured keyword rules.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_posts',
+        name: 'Manage Page Posts',
+        feature: 'Post Publisher & Scheduled Queue',
+        justification: 'Allows the user to compose, publish, and schedule status updates and media posts to their Facebook Page feed.',
+        required: true
+      },
+      {
+        scope: 'pages_read_engagement',
+        name: 'Read Page Engagement',
+        feature: 'Feed & Comments Ingestion',
+        justification: 'Allows reading posts, comments, and reactions on the Facebook Page feed to monitor user engagement.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_engagement',
+        name: 'Manage Page Engagement',
+        feature: 'Comment Auto-Reply & Auto-Like',
+        justification: 'Enables publishing public comment responses and liking customer comments automatically when trigger criteria are met.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_metadata',
+        name: 'Manage Page Subscriptions',
+        feature: 'Webhooks Event Subscriptions',
+        justification: 'Subscribes the connected Page to the App Webhooks endpoint (subscribed_apps) for real-time delivery of messages and feed events.',
+        required: true
+      },
+      {
+        scope: 'pages_read_user_content',
+        name: 'Read User Content on Page',
+        feature: 'Trigger Keyword Detection',
+        justification: 'Allows reading user comment text and user IDs on Page posts so automation rules can match target keywords.',
+        required: false
+      }
+    ];
+
+    const scopeAudit = requiredScopesConfig.map(item => ({
+      ...item,
+      granted: scopes.includes(item.scope)
+    }));
+
     res.json({
       success: true,
       connected: true,
@@ -88,6 +146,7 @@ router.get('/permissions', async (req, res) => {
       pageName: page.pageName,
       isValid,
       scopes,
+      scopeAudit,
       readiness: {
         messenger: hasMessenger,
         posts: hasPosts,
@@ -96,7 +155,7 @@ router.get('/permissions', async (req, res) => {
       missingCommentScopes,
       note: missingCommentScopes.length > 0
         ? `To fully enable comment auto-reply, re-authorize your Page on /index.html or generate a token with: ${missingCommentScopes.join(', ')}`
-        : 'All permissions for Messenger, Posts, and Comments are active!'
+        : 'All required permissions for Messenger, Posts, and Comments are verified!'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

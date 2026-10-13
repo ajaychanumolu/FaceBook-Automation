@@ -69,7 +69,10 @@
     <div class="card">
       <div class="card-header">
         <h1 class="card-title">🌐 Global Comment Auto-Reply</h1>
-        <span id="globalStatusBadge" class="badge badge-disconnected">OFF</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span class="badge badge-info" title="Required Meta Permissions">Scopes: pages_manage_engagement, pages_read_engagement</span>
+          <span id="globalStatusBadge" class="badge badge-disconnected">OFF</span>
+        </div>
       </div>
       <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
         When enabled, automatically responds to comments on <strong>ANY post</strong> on your Facebook Page whenever no post-specific automation rule exists.

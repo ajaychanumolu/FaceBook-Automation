@@ -21,6 +21,9 @@ const eventsRoutes = require('./routes/events');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable reverse proxy trust for Render / Cloudflare / HTTPS headers
+app.set('trust proxy', 1);
+
 // Enable CORS
 app.use(cors());
 
@@ -64,7 +67,7 @@ app.get('/auth/facebook', (req, res) => {
     client_id: appId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging,pages_manage_engagement',
+    scope: 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging,pages_manage_engagement,pages_read_user_content',
     auth_type: 'rerequest',
     state: 'fb_mvp_' + Date.now()
   });

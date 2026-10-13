@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: facebook-page-automation
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: BASE_URL
+        value: https://facebook.oneingo.ai
+      - key: META_APP_ID
+        value: "2182342416011858"
+      - key: META_CONFIG_ID
+        value: "1675968454115396"
+      - key: META_GRAPH_API_VERSION
+        value: v26.0
+      - key: META_WEBHOOK_VERIFY_TOKEN
+        value: fb_mvp_verify_token_2026
+      - key: MONGODB_URI
+        sync: false
+      - key: META_APP_SECRET
+        sync: false

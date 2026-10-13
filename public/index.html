@@ -65,7 +65,7 @@
             Uses your configured Meta App ID: <code id="displayAppId">...</code> and Configuration ID: <code id="displayConfigId">...</code>.
           </p>
           <p style="font-size: 0.85rem; color: var(--text-muted);">
-            Ensure this browser origin matches your Meta App's Allowed Domains (or ngrok HTTPS domain).
+            Ensure this browser origin matches your Meta App's Allowed Domains (<code>https://facebook.oneingo.ai</code>).
           </p>
         </div>
 
@@ -105,12 +105,49 @@
         <div class="form-group">
           <label for="directPageToken">Page Access Token *</label>
           <textarea id="directPageToken" placeholder="Paste your EAAG... Page Access Token here" rows="3"></textarea>
-          <span class="help-text">Must have permissions: pages_show_list, pages_read_engagement, pages_manage_posts, pages_messaging, pages_manage_metadata, pages_manage_engagement.</span>
+          <span class="help-text">Must have permissions: pages_show_list, pages_read_engagement, pages_manage_posts, pages_messaging, pages_manage_metadata, pages_manage_engagement, pages_read_user_content.</span>
         </div>
 
         <button id="directConnectBtn" class="btn btn-success btn-block">Connect with Page Token</button>
       </div>
 
+    </div>
+
+    <!-- Required Scopes & Meta App Review Compliance Card -->
+    <div class="card" style="border-top: 4px solid var(--primary);">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Meta App Review Scopes &amp; Permissions Guide</h2>
+        <span class="badge badge-info" id="auditStatusBadge">Auditing Scopes...</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        The following 7 Meta permissions are required for full automation capabilities. In your Meta App Review screencast, each permission directly corresponds to the functional features below:
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Scope (Permission)</th>
+              <th>Platform Feature</th>
+              <th>Review Justification / Usage</th>
+              <th>Token Status</th>
+            </tr>
+          </thead>
+          <tbody id="scopesTableBody">
+            <!-- Dynamically populated by renderScopesTable() -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background: var(--bg-main); padding: 0.9rem 1.25rem; border-radius: var(--radius-sm); margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <span>🌐 Production Domain: <strong>facebook.oneingo.ai</strong></span> &bull; 
+          <a href="/privacy.html" target="_blank" style="color: var(--primary);">Privacy Policy</a> &bull; 
+          <a href="/terms.html" target="_blank" style="color: var(--primary);">Terms of Service</a> &bull; 
+          <a href="/data-deletion.html" target="_blank" style="color: var(--primary);">Data Deletion</a>
+        </div>
+        <span class="badge badge-connected" style="font-size: 0.8rem;">Ready for Meta Screencast</span>
+      </div>
     </div>
 
   </div>
@@ -158,6 +195,105 @@
         }
       } catch (err) {
         console.error(err);
+      }
+      await loadPermissionsAudit();
+    }
+
+    // Default required permissions configuration for Meta App Review transparency
+    const defaultAuditScopes = [
+      {
+        scope: 'pages_show_list',
+        feature: 'Page Selection & Discovery',
+        justification: 'Displays managed Facebook Pages so user can choose which Page to automate.',
+        required: true
+      },
+      {
+        scope: 'pages_messaging',
+        feature: 'Messenger Auto-Reply Bot',
+        justification: 'Receives customer inquiries and delivers instant automated replies based on keyword rules.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_posts',
+        feature: 'Post Publisher & Scheduler',
+        justification: 'Publishes and schedules status updates, announcements, and media posts to Page feed.',
+        required: true
+      },
+      {
+        scope: 'pages_read_engagement',
+        feature: 'Feed & Comments Ingestion',
+        justification: 'Reads user comments, posts, and engagement metrics to trigger automation workflows.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_engagement',
+        feature: 'Comment Auto-Reply & Auto-Like',
+        justification: 'Publishes public comment replies and likes user comments on Facebook Page posts.',
+        required: true
+      },
+      {
+        scope: 'pages_manage_metadata',
+        feature: 'Webhooks Event Subscriptions',
+        justification: 'Subscribes Page to app webhooks (subscribed_apps) for real-time delivery of messages and feed.',
+        required: true
+      },
+      {
+        scope: 'pages_read_user_content',
+        feature: 'Trigger Keyword Detection',
+        justification: 'Reads user comment text on Page posts to detect keyword triggers for automated replies.',
+        required: false
+      }
+    ];
+
+    async function loadPermissionsAudit() {
+      const tbody = document.getElementById('scopesTableBody');
+      const badge = document.getElementById('auditStatusBadge');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let activeScopes = [];
+      let isConnected = false;
+
+      try {
+        const res = await fetch('/api/pages/permissions');
+        const data = await res.json();
+        if (data.connected && Array.isArray(data.scopes)) {
+          isConnected = true;
+          activeScopes = data.scopes;
+        }
+      } catch (e) {
+        console.warn('Could not inspect permissions:', e);
+      }
+
+      let allGranted = true;
+      defaultAuditScopes.forEach(item => {
+        const isGranted = isConnected && activeScopes.includes(item.scope);
+        if (!isGranted && item.required) allGranted = false;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <code style="font-size: 0.88rem; font-weight: 700; color: var(--primary);">${item.scope}</code>
+            ${item.required ? '<span class="badge badge-info" style="font-size: 0.7rem; margin-left: 4px;">Required</span>' : '<span class="badge badge-secondary" style="font-size: 0.7rem; margin-left: 4px;">Optional</span>'}
+          </td>
+          <td><strong>${item.feature}</strong></td>
+          <td style="font-size: 0.85rem; color: var(--text-muted);">${item.justification}</td>
+          <td>
+            ${isGranted 
+              ? '<span class="badge badge-connected">✅ Granted</span>' 
+              : (isConnected ? '<span class="badge badge-warning">⚠️ Missing</span>' : '<span class="badge badge-disconnected">Pending Auth</span>')
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (isConnected) {
+        badge.className = allGranted ? 'badge badge-connected' : 'badge badge-warning';
+        badge.textContent = allGranted ? 'All Scopes Active ✅' : 'Action Required ⚠️';
+      } else {
+        badge.className = 'badge badge-info';
+        badge.textContent = '7 Scopes Documented';
       }
     }
 
@@ -218,7 +354,7 @@
         loginOptions.override_default_response_type = true;
       } else {
         // Standard login: use scope directly
-        loginOptions.scope = 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging,pages_manage_engagement';
+        loginOptions.scope = 'pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_metadata,pages_messaging,pages_manage_engagement,pages_read_user_content';
       }
 
       FB.login(function(response) {

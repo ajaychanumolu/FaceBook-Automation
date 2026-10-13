@@ -45,8 +45,10 @@
 
         <div class="checklist-item">
           <div>
-            <strong>2. Public ngrok Webhook Tunnel</strong>
-            <div id="tunnelDiagText" style="font-size: 0.8rem; color: var(--text-muted);">Callback URL: <code id="displayWebhookUrl">-</code></div>
+            <strong>2. Production Domain &amp; Webhook Endpoint</strong>
+            <div id="tunnelDiagText" style="font-size: 0.8rem; color: var(--text-muted);">
+              Domain: <code id="displayDomain">facebook.oneingo.ai</code> &bull; Callback: <code id="displayWebhookUrl">https://facebook.oneingo.ai/webhook</code>
+            </div>
           </div>
           <span id="tunnelDiagBadge" class="badge badge-info">Configured</span>
         </div>
@@ -74,6 +76,33 @@
         <button class="btn btn-secondary btn-sm" onclick="testCommentWebhook()">⚡ Test Comment Webhook</button>
         <a href="https://developers.facebook.com/apps/2182342416011858/webhooks/" target="_blank" class="btn btn-secondary btn-sm">🔗 Open Meta Webhooks Settings</a>
         <a href="https://developers.facebook.com/apps/2182342416011858/roles/" target="_blank" class="btn btn-secondary btn-sm">👥 Open Meta Roles (Testers)</a>
+      </div>
+    </div>
+
+    <!-- Section: Meta App Review & Scopes Status Grid -->
+    <div class="card" style="border-top: 4px solid var(--primary);">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Meta App Review Scopes &amp; Permissions Health</h2>
+        <span id="dashScopeAuditBadge" class="badge badge-info">Auditing Scopes...</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        The table below displays all Meta scopes required by this application, their mapped automation features, and real-time grant status for screen-recording demonstration during App Review.
+      </p>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Scope (Permission)</th>
+              <th>Platform Feature</th>
+              <th>Status</th>
+              <th>Demonstration Tip for Meta Screencast</th>
+            </tr>
+          </thead>
+          <tbody id="dashScopesTableBody">
+            <!-- Dynamically populated by renderDashboardScopes() -->
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -218,9 +247,17 @@
           dbText.innerHTML = `<span style="color:var(--danger);">${data.mongodb.note}</span>`;
         }
 
-        // 2. Meta & Tunnel
+        // 2. Meta & Domain
         document.getElementById('displayAppId').textContent = data.meta.appId;
         document.getElementById('displayGraphVer').textContent = data.meta.graphVersion;
+        const domainEl = document.getElementById('displayDomain');
+        if (domainEl) {
+          try {
+            domainEl.textContent = data.meta.baseUrl ? new URL(data.meta.baseUrl).hostname : 'facebook.oneingo.ai';
+          } catch (_) {
+            domainEl.textContent = 'facebook.oneingo.ai';
+          }
+        }
         if (data.meta.baseUrl) {
           document.getElementById('displayWebhookUrl').textContent = `${data.meta.baseUrl}/webhook`;
           document.getElementById('tunnelDiagBadge').className = 'badge badge-connected';
@@ -228,6 +265,103 @@
         }
       } catch (e) {
         console.error('Health check failed:', e);
+      }
+    }
+
+    const dashboardScopesConfig = [
+      {
+        scope: 'pages_show_list',
+        feature: 'Page Discovery & Selection',
+        required: true,
+        tip: 'Demonstrate clicking "Connect Facebook" on home page and selecting Page from list.'
+      },
+      {
+        scope: 'pages_messaging',
+        feature: 'Messenger Keyword Auto-Reply Bot',
+        required: true,
+        tip: 'Send a message matching a keyword (e.g. "price") from a tester account and show instant bot reply.'
+      },
+      {
+        scope: 'pages_manage_posts',
+        feature: 'Post Publisher & Scheduled Queue',
+        required: true,
+        tip: 'Publish a status post and schedule a future post from the Posts tab; verify on Facebook.'
+      },
+      {
+        scope: 'pages_read_engagement',
+        feature: 'Feed & Comments Ingestion',
+        required: true,
+        tip: 'Show comment detection in the Live Stream when a user comments on a post.'
+      },
+      {
+        scope: 'pages_manage_engagement',
+        feature: 'Comment Auto-Reply & Auto-Like',
+        required: true,
+        tip: 'Comment on a Page post from a tester account and show the Page liking and replying to the comment.'
+      },
+      {
+        scope: 'pages_manage_metadata',
+        feature: 'Webhooks Event Subscriptions',
+        required: true,
+        tip: 'Show "Subscribed" webhook badge on Dashboard and click "Ping Webhook Verification".'
+      },
+      {
+        scope: 'pages_read_user_content',
+        feature: 'Trigger Keyword Detection',
+        required: false,
+        tip: 'Show keyword matching in comment auto-reply rules based on comment message text.'
+      }
+    ];
+
+    async function renderDashboardScopes() {
+      const tbody = document.getElementById('dashScopesTableBody');
+      const badge = document.getElementById('dashScopeAuditBadge');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let activeScopes = [];
+      let isConnected = false;
+
+      try {
+        const res = await fetch('/api/pages/permissions');
+        const data = await res.json();
+        if (data.connected && Array.isArray(data.scopes)) {
+          isConnected = true;
+          activeScopes = data.scopes;
+        }
+      } catch (e) {
+        console.warn('Could not inspect permissions:', e);
+      }
+
+      let allGranted = true;
+      dashboardScopesConfig.forEach(item => {
+        const isGranted = isConnected && activeScopes.includes(item.scope);
+        if (!isGranted && item.required) allGranted = false;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <code style="font-size: 0.88rem; font-weight: 700; color: var(--primary);">${item.scope}</code>
+            ${item.required ? '<span class="badge badge-info" style="font-size: 0.7rem; margin-left: 4px;">Required</span>' : '<span class="badge badge-secondary" style="font-size: 0.7rem; margin-left: 4px;">Optional</span>'}
+          </td>
+          <td><strong>${item.feature}</strong></td>
+          <td>
+            ${isGranted 
+              ? '<span class="badge badge-connected">✅ Granted</span>' 
+              : (isConnected ? '<span class="badge badge-warning">⚠️ Missing</span>' : '<span class="badge badge-disconnected">Pending Connection</span>')
+            }
+          </td>
+          <td style="font-size: 0.85rem; color: var(--text-muted);">${item.tip}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (isConnected) {
+        badge.className = allGranted ? 'badge badge-connected' : 'badge badge-warning';
+        badge.textContent = allGranted ? 'All 7 Scopes Verified ✅' : 'Action Required ⚠️';
+      } else {
+        badge.className = 'badge badge-info';
+        badge.textContent = '7 Scopes Ready for Demonstration';
       }
     }
 
@@ -338,6 +472,7 @@
         }
 
         await loadEvents();
+        await renderDashboardScopes();
       } catch (err) {
         console.error('Error loading dashboard:', err);
       }
