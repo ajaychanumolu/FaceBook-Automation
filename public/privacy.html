@@ -2,19 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Privacy Policy - Facebook Automation MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - OneInfo Facebook Suite</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body style="padding: 2rem;">
-  <div class="container card">
-    <h1>Privacy Policy</h1>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Last updated: September 2026</p>
-    <p>This Facebook Automation MVP demo application interacts with Facebook Pages and Messenger to provide automated responses to user messages and post comments.</p>
-    <h3 style="margin-top: 1rem;">Data We Process</h3>
-    <p>We process incoming Facebook Page messages and comments solely to trigger pre-configured responses. No user data is sold or shared with third parties.</p>
-    <h3 style="margin-top: 1rem;">Contact</h3>
-    <p>For questions regarding this application, contact the developer via your Meta App administrator account.</p>
-    <p style="margin-top: 2rem;"><a href="/index.html" class="btn btn-secondary">Back to Home</a></p>
+  <div class="container card" style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+      <svg style="width: 32px; height: 32px; fill: var(--primary);" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      <div>
+        <h1 style="font-size: 1.6rem; color: var(--text-main);">Privacy Policy</h1>
+        <div style="color: var(--text-muted); font-size: 0.85rem;">OneInfo Facebook Suite &bull; Effective Date: October 2026</div>
+      </div>
+    </div>
+
+    <p style="margin-bottom: 1rem;">
+      <strong>OneInfo Facebook Suite</strong> ("we", "our", or "the platform") is committed to protecting your privacy and ensuring transparent data practices in compliance with Meta Developer Platform Terms and global privacy regulations.
+    </p>
+
+    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.15rem;">1. Information We Access</h3>
+    <p style="margin-bottom: 0.75rem;">
+      When you connect your Facebook Page, our platform requests explicit permissions via Meta Graph API:
+    </p>
+    <ul style="margin-left: 1.5rem; line-height: 1.8; color: var(--text-main); margin-bottom: 1rem;">
+      <li><strong>Page Information:</strong> Page name, ID, and category via <code>pages_show_list</code> to allow Page selection.</li>
+      <li><strong>Messenger Communications:</strong> Incoming user messages via <code>pages_messaging</code> strictly to trigger automated keyword responses.</li>
+      <li><strong>Page Feed &amp; Comments:</strong> Comments on Page posts via <code>pages_read_engagement</code> and <code>pages_manage_engagement</code> to provide automated public replies and likes.</li>
+      <li><strong>Page Post Publishing:</strong> Page updates and media via <code>pages_manage_posts</code> to schedule and publish authorized posts.</li>
+    </ul>
+
+    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.15rem;">2. How Data is Used &amp; Retained</h3>
+    <p style="margin-bottom: 1rem;">
+      Data processed through Meta Webhooks is utilized exclusively for real-time automation workflows. We do not sell, rent, monetize, or transfer your personal data or user message contents to third parties or advertising networks.
+    </p>
+
+    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.15rem;">3. Data Deletion</h3>
+    <p style="margin-bottom: 1rem;">
+      Users and Page administrators may disconnect their Page or request full data deletion at any time by following our <a href="/data-deletion.html" style="color: var(--primary); font-weight: 600;">Data Deletion Instructions</a>.
+    </p>
+
+    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.15rem;">4. Contact Us</h3>
+    <p style="margin-bottom: 1.5rem;">
+      For privacy inquiries, please contact our support team at <a href="mailto:support@oneinfo.ai" style="color: var(--primary);">support@oneinfo.ai</a> or through your Meta App administrator portal.
+    </p>
+
+    <div style="border-top: 1px solid var(--border-light); padding-top: 1.25rem;">
+      <a href="/dashboard.html" class="btn btn-secondary">Return to Application</a>
+    </div>
   </div>
 </body>
 </html>

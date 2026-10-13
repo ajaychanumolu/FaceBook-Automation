@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Facebook Automation MVP</title>
+  <title>Dashboard - OneInfo Facebook Suite</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <nav class="navbar">
     <a href="/index.html" class="nav-brand">
       <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Facebook Automation MVP
+      <span>OneInfo <span style="font-weight: 400; opacity: 0.85; font-size: 0.95rem;">| Facebook Suite</span></span>
     </a>
     <div class="nav-links">
       <a href="/dashboard.html" class="nav-link active">Dashboard</a>
@@ -79,30 +79,64 @@
       </div>
     </div>
 
-    <!-- Section: Meta App Review & Scopes Status Grid -->
+    <!-- Section: Automation Modules Overview -->
     <div class="card" style="border-top: 4px solid var(--primary);">
       <div class="card-header">
-        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Meta App Review Scopes &amp; Permissions Health</h2>
-        <span id="dashScopeAuditBadge" class="badge badge-info">Auditing Scopes...</span>
+        <h2 class="card-title" style="font-size: 1.15rem;">🚀 OneInfo Automation Modules</h2>
+        <span class="badge badge-connected">All Systems Operational</span>
       </div>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-        The table below displays all Meta scopes required by this application, their mapped automation features, and real-time grant status for screen-recording demonstration during App Review.
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Active automation modules for your connected Facebook Page. Click any module to access its dedicated configuration and real-time controls.
       </p>
 
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Scope (Permission)</th>
-              <th>Platform Feature</th>
-              <th>Status</th>
-              <th>Demonstration Tip for Meta Screencast</th>
-            </tr>
-          </thead>
-          <tbody id="dashScopesTableBody">
-            <!-- Dynamically populated by renderDashboardScopes() -->
-          </tbody>
-        </table>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700;">💬 Messenger Bot</h3>
+              <span class="badge badge-connected">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Real-time message reception and keyword-triggered automated responses via Meta Send API.
+            </p>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+            <code style="font-size: 0.8rem; color: var(--primary);">pages_messaging</code>
+            <a href="/messenger.html" class="btn btn-secondary btn-sm">Configure &rarr;</a>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700;">💬 Comment Moderation</h3>
+              <span class="badge badge-connected">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Automated public comment replies, comment liking, and private message triggers on Page posts.
+            </p>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+            <code style="font-size: 0.8rem; color: var(--primary);">pages_manage_engagement</code>
+            <a href="/comments.html" class="btn btn-secondary btn-sm">Configure &rarr;</a>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h3 style="font-size: 1.05rem; font-weight: 700;">📢 Post Publisher</h3>
+              <span class="badge badge-connected">Ready</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Direct publishing and scheduled queue for status updates, media announcements, and links.
+            </p>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+            <code style="font-size: 0.8rem; color: var(--primary);">pages_manage_posts</code>
+            <a href="/posts.html" class="btn btn-secondary btn-sm">Configure &rarr;</a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -215,7 +249,10 @@
   </div>
 
   <footer>
-    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+    OneInfo Suite &bull; Enterprise Facebook Page &amp; Messenger Automation &bull; 
+    <a href="/privacy.html">Privacy Policy</a> &bull; 
+    <a href="/terms.html">Terms of Service</a> &bull; 
+    <a href="/data-deletion.html">User Data Deletion</a>
   </footer>
 
   <script>
@@ -472,7 +509,6 @@
         }
 
         await loadEvents();
-        await renderDashboardScopes();
       } catch (err) {
         console.error('Error loading dashboard:', err);
       }

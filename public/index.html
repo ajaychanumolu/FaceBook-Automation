@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connect Facebook Page - Automation MVP</title>
+  <title>Connect Facebook Page - OneInfo Facebook Suite</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <nav class="navbar">
     <a href="/index.html" class="nav-brand">
       <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Facebook Automation MVP
+      <span>OneInfo <span style="font-weight: 400; opacity: 0.85; font-size: 0.95rem;">| Facebook Suite</span></span>
     </a>
     <div class="nav-links">
       <a href="/dashboard.html" class="nav-link">Dashboard</a>
@@ -43,10 +43,10 @@
     <div class="card">
       <div class="card-header">
         <h1 class="card-title">Connect Facebook Page</h1>
-        <span class="badge badge-info">1 Page MVP</span>
+        <span class="badge badge-connected">Professional Edition</span>
       </div>
       <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
-        Authorize your Meta Developer Account to connect your Facebook Page for Messenger auto-replies, post comment automation, and publishing.
+        Authorize your Facebook Account to connect your Page for automated messaging, comment moderation, and scheduled publishing.
       </p>
 
       <!-- Feedback Messages -->
@@ -54,29 +54,29 @@
 
       <!-- Connection Tabs -->
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('embeddedTab')">Embedded Signup (Meta Login)</button>
-        <button class="tab-btn" onclick="switchTab('directTab')">Direct Page Token (Fallback / Fast Dev)</button>
+        <button class="tab-btn active" onclick="switchTab('embeddedTab')">Facebook OAuth Authorization</button>
+        <button class="tab-btn" onclick="switchTab('directTab')">Direct Page Token (Alternative)</button>
       </div>
 
       <!-- Tab 1: Embedded Signup / FB Login -->
       <div id="embeddedTab" class="tab-pane active">
         <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
           <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
-            Uses your configured Meta App ID: <code id="displayAppId">...</code> and Configuration ID: <code id="displayConfigId">...</code>.
+            Connecting with App ID: <code id="displayAppId">...</code> &bull; Production Domain: <code>https://facebook.oneinfo.ai</code>
           </p>
           <p style="font-size: 0.85rem; color: var(--text-muted);">
-            Ensure this browser origin matches your Meta App's Allowed Domains (<code>https://facebook.oneinfo.ai</code>).
+            Click the button below to launch Meta OAuth and select the Facebook Page you want to manage.
           </p>
         </div>
 
         <div style="display: flex; gap: 0.75rem; flex-direction: column;">
           <a href="/auth/facebook" class="btn btn-primary btn-block" style="font-size: 1.05rem; padding: 0.85rem; background-color: #1877f2; text-align: center; text-decoration: none;">
             <svg style="width: 20px; height: 20px; fill: white; margin-right: 6px; vertical-align: middle;" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            Connect Facebook (Direct OAuth Flow - Recommended)
+            Connect Facebook Page (OAuth 2.0)
           </a>
 
           <button id="fbLoginBtn" class="btn btn-secondary btn-block" style="font-size: 0.95rem; padding: 0.75rem;">
-            Or Connect via Popup with Embedded Signup (Config ID)
+            Or Connect via Facebook Login Popup
           </button>
         </div>
 
@@ -89,7 +89,7 @@
       <!-- Tab 2: Direct Token Input -->
       <div id="directTab" class="tab-pane">
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-          If you generated a Page Access Token directly via the Meta Graph API Explorer or Developer Portal, you can connect immediately without domain restrictions:
+          If you generated a Page Access Token directly via the Meta Graph API Explorer, you can connect your Page directly:
         </p>
 
         <div class="form-group">
@@ -99,13 +99,13 @@
 
         <div class="form-group">
           <label for="directPageName">Facebook Page Name</label>
-          <input type="text" id="directPageName" placeholder="e.g. My Test Page">
+          <input type="text" id="directPageName" placeholder="e.g. My Official Business Page">
         </div>
 
         <div class="form-group">
           <label for="directPageToken">Page Access Token *</label>
-          <textarea id="directPageToken" placeholder="Paste your EAAG... Page Access Token here" rows="3"></textarea>
-          <span class="help-text">Must have permissions: pages_show_list, pages_read_engagement, pages_manage_posts, pages_messaging, pages_manage_metadata, pages_manage_engagement, pages_read_user_content.</span>
+          <textarea id="directPageToken" placeholder="Paste your Page Access Token here" rows="3"></textarea>
+          <span class="help-text">Page Token with required management scopes.</span>
         </div>
 
         <button id="directConnectBtn" class="btn btn-success btn-block">Connect with Page Token</button>
@@ -113,47 +113,56 @@
 
     </div>
 
-    <!-- Required Scopes & Meta App Review Compliance Card -->
+    <!-- Required Permissions Overview Card (Scoped only to Page connection) -->
     <div class="card" style="border-top: 4px solid var(--primary);">
       <div class="card-header">
-        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Meta App Review Scopes &amp; Permissions Guide</h2>
-        <span class="badge badge-info" id="auditStatusBadge">Auditing Scopes...</span>
+        <h2 class="card-title" style="font-size: 1.15rem;">🔐 Connection Permissions Overview</h2>
+        <span class="badge badge-info">Page Setup Scopes</span>
       </div>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-        The following 7 Meta permissions are required for full automation capabilities. In your Meta App Review screencast, each permission directly corresponds to the functional features below:
+        Connecting your Page requires the following administrative permissions to discover Pages and link real-time webhook events:
       </p>
 
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Scope (Permission)</th>
-              <th>Platform Feature</th>
-              <th>Review Justification / Usage</th>
-              <th>Token Status</th>
-            </tr>
-          </thead>
-          <tbody id="scopesTableBody">
-            <!-- Dynamically populated by renderScopesTable() -->
-          </tbody>
-        </table>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+        <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <code style="font-weight: 700; color: var(--primary);">pages_show_list</code>
+            <span class="badge badge-connected" style="font-size: 0.7rem;">Required</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Enables business owners to discover and select which of their managed Facebook Pages to connect to the platform.
+          </div>
+        </div>
+
+        <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <code style="font-weight: 700; color: var(--primary);">pages_manage_metadata</code>
+            <span class="badge badge-connected" style="font-size: 0.7rem;">Required</span>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">
+            Subscribes the connected Page to app webhooks (<code>subscribed_apps</code>) so real-time notifications are delivered reliably.
+          </div>
+        </div>
       </div>
 
-      <div style="background: var(--bg-main); padding: 0.9rem 1.25rem; border-radius: var(--radius-sm); margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+      <div style="background: #f1f5f9; padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <div>
-          <span>🌐 Production Domain: <strong>facebook.oneinfo.ai</strong></span> &bull; 
+          <span>🌐 Domain: <strong>facebook.oneinfo.ai</strong></span> &bull; 
           <a href="/privacy.html" target="_blank" style="color: var(--primary);">Privacy Policy</a> &bull; 
           <a href="/terms.html" target="_blank" style="color: var(--primary);">Terms of Service</a> &bull; 
           <a href="/data-deletion.html" target="_blank" style="color: var(--primary);">Data Deletion</a>
         </div>
-        <span class="badge badge-connected" style="font-size: 0.8rem;">Ready for Meta Screencast</span>
+        <span class="badge badge-connected" style="font-size: 0.8rem;">Meta App Review Ready</span>
       </div>
     </div>
 
   </div>
 
   <footer>
-    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+    OneInfo Suite &bull; Enterprise Facebook Page &amp; Messenger Automation &bull; 
+    <a href="/privacy.html">Privacy Policy</a> &bull; 
+    <a href="/terms.html">Terms of Service</a> &bull; 
+    <a href="/data-deletion.html">User Data Deletion</a>
   </footer>
 
   <!-- Facebook JavaScript SDK -->
@@ -199,102 +208,8 @@
       await loadPermissionsAudit();
     }
 
-    // Default required permissions configuration for Meta App Review transparency
-    const defaultAuditScopes = [
-      {
-        scope: 'pages_show_list',
-        feature: 'Page Selection & Discovery',
-        justification: 'Displays managed Facebook Pages so user can choose which Page to automate.',
-        required: true
-      },
-      {
-        scope: 'pages_messaging',
-        feature: 'Messenger Auto-Reply Bot',
-        justification: 'Receives customer inquiries and delivers instant automated replies based on keyword rules.',
-        required: true
-      },
-      {
-        scope: 'pages_manage_posts',
-        feature: 'Post Publisher & Scheduler',
-        justification: 'Publishes and schedules status updates, announcements, and media posts to Page feed.',
-        required: true
-      },
-      {
-        scope: 'pages_read_engagement',
-        feature: 'Feed & Comments Ingestion',
-        justification: 'Reads user comments, posts, and engagement metrics to trigger automation workflows.',
-        required: true
-      },
-      {
-        scope: 'pages_manage_engagement',
-        feature: 'Comment Auto-Reply & Auto-Like',
-        justification: 'Publishes public comment replies and likes user comments on Facebook Page posts.',
-        required: true
-      },
-      {
-        scope: 'pages_manage_metadata',
-        feature: 'Webhooks Event Subscriptions',
-        justification: 'Subscribes Page to app webhooks (subscribed_apps) for real-time delivery of messages and feed.',
-        required: true
-      },
-      {
-        scope: 'pages_read_user_content',
-        feature: 'Trigger Keyword Detection',
-        justification: 'Reads user comment text on Page posts to detect keyword triggers for automated replies.',
-        required: false
-      }
-    ];
-
     async function loadPermissionsAudit() {
-      const tbody = document.getElementById('scopesTableBody');
-      const badge = document.getElementById('auditStatusBadge');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      let activeScopes = [];
-      let isConnected = false;
-
-      try {
-        const res = await fetch('/api/pages/permissions');
-        const data = await res.json();
-        if (data.connected && Array.isArray(data.scopes)) {
-          isConnected = true;
-          activeScopes = data.scopes;
-        }
-      } catch (e) {
-        console.warn('Could not inspect permissions:', e);
-      }
-
-      let allGranted = true;
-      defaultAuditScopes.forEach(item => {
-        const isGranted = isConnected && activeScopes.includes(item.scope);
-        if (!isGranted && item.required) allGranted = false;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <code style="font-size: 0.88rem; font-weight: 700; color: var(--primary);">${item.scope}</code>
-            ${item.required ? '<span class="badge badge-info" style="font-size: 0.7rem; margin-left: 4px;">Required</span>' : '<span class="badge badge-secondary" style="font-size: 0.7rem; margin-left: 4px;">Optional</span>'}
-          </td>
-          <td><strong>${item.feature}</strong></td>
-          <td style="font-size: 0.85rem; color: var(--text-muted);">${item.justification}</td>
-          <td>
-            ${isGranted 
-              ? '<span class="badge badge-connected">✅ Granted</span>' 
-              : (isConnected ? '<span class="badge badge-warning">⚠️ Missing</span>' : '<span class="badge badge-disconnected">Pending Auth</span>')
-            }
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      if (isConnected) {
-        badge.className = allGranted ? 'badge badge-connected' : 'badge badge-warning';
-        badge.textContent = allGranted ? 'All Scopes Active ✅' : 'Action Required ⚠️';
-      } else {
-        badge.className = 'badge badge-info';
-        badge.textContent = '7 Scopes Documented';
-      }
+      // Scopes table is now scoped directly to dedicated feature pages
     }
 
     // Initialize Meta config and JS SDK

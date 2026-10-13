@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Messenger Automation - Facebook Automation MVP</title>
+  <title>Messenger Automation - OneInfo Facebook Suite</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <nav class="navbar">
     <a href="/index.html" class="nav-brand">
       <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      Facebook Automation MVP
+      <span>OneInfo <span style="font-weight: 400; opacity: 0.85; font-size: 0.95rem;">| Facebook Suite</span></span>
     </a>
     <div class="nav-links">
       <a href="/dashboard.html" class="nav-link">Dashboard</a>
@@ -29,13 +29,16 @@
       <div class="card-header">
         <h1 class="card-title">💬 Messenger Auto-Reply Automation</h1>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <span class="badge badge-info" title="Required Meta Permission">Scope: pages_messaging</span>
+          <span class="badge badge-info" title="Required Meta Permission">Permission: pages_messaging</span>
           <span id="messengerStatusBadge" class="badge badge-disconnected">OFF</span>
         </div>
       </div>
-      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
-        When someone messages your Facebook Page, your server automatically matches keywords or sends your fallback reply via Meta Send API.
+      <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+        When customers message your Facebook Page, OneInfo Suite automatically matches keyword rules or sends your fallback reply via the Meta Send API.
       </p>
+      <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        🔒 Meta Permission Used: <code>pages_messaging</code> (Incoming customer conversation reception and automated messaging responses).
+      </div>
 
       <div id="alertBox" style="display: none;"></div>
 
@@ -156,7 +159,10 @@
   </div>
 
   <footer>
-    Facebook Page Automation MVP &bull; Built with Node.js, Express &amp; MongoDB
+    OneInfo Suite &bull; Enterprise Facebook Page &amp; Messenger Automation &bull; 
+    <a href="/privacy.html">Privacy Policy</a> &bull; 
+    <a href="/terms.html">Terms of Service</a> &bull; 
+    <a href="/data-deletion.html">User Data Deletion</a>
   </footer>
 
   <script>
