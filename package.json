@@ -1,7 +1,7 @@
 {
   "name": "facebook-page-automation-mvp",
   "version": "1.0.0",
-  "description": "Facebook Page & Messenger Automation MVP hosted on Render with facebook.oneingo.ai, Express and MongoDB",
+  "description": "Facebook Page & Messenger Automation MVP hosted on Render with facebook.oneinfo.ai, Express and MongoDB",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

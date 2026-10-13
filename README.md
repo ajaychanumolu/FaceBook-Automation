@@ -1,6 +1,6 @@
 # Facebook Page Automation Platform
 
-A complete, production-ready Facebook Page Automation system built with **Node.js, Express.js, MongoDB, and Vanilla HTML/CSS/JavaScript**, deployed on **Render** with the custom domain **`https://facebook.oneingo.ai`**.
+A complete, production-ready Facebook Page Automation system built with **Node.js, Express.js, MongoDB, and Vanilla HTML/CSS/JavaScript**, deployed on **Render** with the custom domain **`https://facebook.oneinfo.ai`**.
 
 ---
 
@@ -31,15 +31,15 @@ A complete, production-ready Facebook Page Automation system built with **Node.j
 
 ## 🌐 Production Architecture
 
-- **Domain**: `https://facebook.oneingo.ai`
+- **Domain**: `https://facebook.oneinfo.ai`
 - **Host**: [Render](https://dashboard.render.com/) (Web Service with automatic SSL)
 - **Database**: MongoDB Atlas Cluster
-- **Webhook Endpoint**: `https://facebook.oneingo.ai/webhook`
-- **Health Check**: `https://facebook.oneingo.ai/health`
+- **Webhook Endpoint**: `https://facebook.oneinfo.ai/webhook`
+- **Health Check**: `https://facebook.oneinfo.ai/health`
 - **Legal Compliance Pages**:
-  - Privacy Policy: `https://facebook.oneingo.ai/privacy.html`
-  - Terms of Service: `https://facebook.oneingo.ai/terms.html`
-  - Data Deletion Instructions: `https://facebook.oneingo.ai/data-deletion.html`
+  - Privacy Policy: `https://facebook.oneinfo.ai/privacy.html`
+  - Terms of Service: `https://facebook.oneinfo.ai/terms.html`
+  - Data Deletion Instructions: `https://facebook.oneinfo.ai/data-deletion.html`
 
 ---
 

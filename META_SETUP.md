@@ -1,6 +1,6 @@
 # Meta Developer App & System Configuration Guide
 
-Complete guide for configuring your **Meta Developer App (`2182342416011858`)**, deploying to **Render hosting** with custom domain **`facebook.oneingo.ai`**, configuring Webhooks, and submitting for **Meta App Review**.
+Complete guide for configuring your **Meta Developer App (`2182342416011858`)**, deploying to **Render hosting** with custom domain **`facebook.oneinfo.ai`**, configuring Webhooks, and submitting for **Meta App Review**.
 
 ---
 
@@ -15,8 +15,8 @@ All production values match your updated `.env` configuration:
 | **Config ID (Login for Business)** | `1675968454115396` |
 | **Graph API Version** | `v26.0` |
 | **Webhook Verify Token** | `fb_mvp_verify_token_2026` |
-| **Production Domain** | `https://facebook.oneingo.ai` |
-| **Production Webhook URL** | `https://facebook.oneingo.ai/webhook` |
+| **Production Domain** | `https://facebook.oneinfo.ai` |
+| **Production Webhook URL** | `https://facebook.oneinfo.ai/webhook` |
 | **Local Port** | `3000` |
 
 ---
@@ -26,20 +26,20 @@ All production values match your updated `.env` configuration:
 ### Step 2.1: Deploy Web Service on Render
 1. Sign in to [Render](https://dashboard.render.com/).
 2. Click **New +** > **Web Service**.
-3. Connect your Git repository (`facebook_automation_mvp`).
+3. Connect your Git repository (`ajaychanumolu/FaceBook-Automation`).
 4. Configure service settings:
    - **Name**: `facebook-page-automation` (or your choice)
    - **Runtime**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
-   - **Instance Type**: Free or Starter
+   - **Instance Type**: Free
 5. Under **Environment Variables**, add the following:
 
 | Environment Variable | Recommended Value |
 | :--- | :--- |
 | `NODE_ENV` | `production` |
 | `PORT` | `3000` *(Render maps its HTTP port automatically)* |
-| `BASE_URL` | `https://facebook.oneingo.ai` |
+| `BASE_URL` | `https://facebook.oneinfo.ai` |
 | `MONGODB_URI` | `mongodb+srv://ajayoneinfo_db_user:2B4UmDnX1qQQD7tE@automaton.xg239we.mongodb.net/facebook_mvp?retryWrites=true&w=majority` |
 | `META_APP_ID` | `2182342416011858` |
 | `META_APP_SECRET` | `76b9ca62fa2750563886385ae3482b1c` |
@@ -51,21 +51,21 @@ All production values match your updated `.env` configuration:
 
 ---
 
-### Step 2.2: Attach Custom Domain (`facebook.oneingo.ai`)
+### Step 2.2: Attach Custom Domain (`facebook.oneinfo.ai`)
 1. In your Render Service dashboard, navigate to **Settings** > **Custom Domains**.
 2. Click **+ Add Custom Domain** and enter:
    ```text
-   facebook.oneingo.ai
+   facebook.oneinfo.ai
    ```
-3. Render will provide a **DNS Target** (typically `facebook-page-automation.onrender.com`).
-4. Open your DNS provider (Cloudflare, GoDaddy, Namecheap, Route 53, etc.) for `oneingo.ai`:
+3. Render will provide a **DNS Target** (typically `<your-service-name>.onrender.com`).
+4. Open your DNS provider (Cloudflare, GoDaddy, Namecheap, Route 53, etc.) for `oneinfo.ai`:
    - Add a **CNAME** record:
      - **Host / Name**: `facebook`
      - **Target / Value**: `<your-render-service-name>.onrender.com`
      - **TTL**: Auto or 300 seconds
      - *(If using Cloudflare, set Proxy status to DNS Only or Full SSL)*
-5. Render will automatically issue a free **Let's Encrypt SSL/TLS Certificate** for `https://facebook.oneingo.ai`.
-6. Once the status shows **Verified**, your app is live at `https://facebook.oneingo.ai`!
+5. Render will automatically issue a free **Let's Encrypt SSL/TLS Certificate** for `https://facebook.oneinfo.ai`.
+6. Once the status shows **Verified**, your app is live at `https://facebook.oneinfo.ai`!
 
 ---
 
@@ -77,20 +77,20 @@ Log in to [Meta for Developers](https://developers.facebook.com/apps/) and selec
 1. In the left sidebar, click **App Settings > Basic**.
 2. Update the following fields:
    - **App Domains**:
-     - `facebook.oneingo.ai`
-     - `oneingo.ai`
+     - `facebook.oneinfo.ai`
+     - `oneinfo.ai`
      - `localhost` *(optional for dev)*
    - **Privacy Policy URL**:
-     `https://facebook.oneingo.ai/privacy.html`
+     `https://facebook.oneinfo.ai/privacy.html`
    - **Terms of Service URL**:
-     `https://facebook.oneingo.ai/terms.html`
+     `https://facebook.oneinfo.ai/terms.html`
    - **User Data Deletion**:
      Select **Data Deletion Instructions URL** and enter:
-     `https://facebook.oneingo.ai/data-deletion.html`
+     `https://facebook.oneinfo.ai/data-deletion.html`
    - **App Category**: Select `Business and Pages` or `Utility`
    - **App Icon**: Upload a 1024x1024 high-resolution logo (required for App Review submission)
 3. Scroll down to the **Website** platform (or click **+ Add Platform > Website**):
-   - **Site URL**: `https://facebook.oneingo.ai/`
+   - **Site URL**: `https://facebook.oneinfo.ai/`
 4. Click **Save Changes** at the bottom right.
 
 ---
@@ -102,11 +102,11 @@ Log in to [Meta for Developers](https://developers.facebook.com/apps/) and selec
    - **Web OAuth Login**: `Yes`
    - **Login with the JavaScript SDK**: `Yes`
 3. **Allowed Domains for the JavaScript SDK**:
-   - `https://facebook.oneingo.ai`
+   - `https://facebook.oneinfo.ai`
    - `http://localhost:3000` *(for local development)*
 4. **Valid OAuth Redirect URIs** (Enter each exact URI):
-   - `https://facebook.oneingo.ai/auth/callback`
-   - `https://facebook.oneingo.ai/`
+   - `https://facebook.oneinfo.ai/auth/callback`
+   - `https://facebook.oneinfo.ai/`
    - `http://localhost:3000/auth/callback` *(for local development)*
    - `http://localhost:3000/` *(for local development)*
 5. Click **Save Changes**.
@@ -117,7 +117,7 @@ Log in to [Meta for Developers](https://developers.facebook.com/apps/) and selec
 1. In the left sidebar, click **Webhooks**.
 2. Select **Page** from the dropdown menu at the top.
 3. Click **Edit Subscription** (or **Subscribe to this object**):
-   - **Callback URL**: `https://facebook.oneingo.ai/webhook`
+   - **Callback URL**: `https://facebook.oneinfo.ai/webhook`
    - **Verify Token**: `fb_mvp_verify_token_2026`
 4. Click **Verify and Save**. (Our server on Render answers immediately with HTTP 200 and echoes the challenge).
 5. In the Page Webhook fields list, click **Subscribe** on:
@@ -129,8 +129,8 @@ Log in to [Meta for Developers](https://developers.facebook.com/apps/) and selec
 
 ### Step 3.4: Subscribing Your Page to Webhooks
 After the App webhook URL is updated, the specific Facebook Page must install the updated webhook target.
-- Open `https://facebook.oneingo.ai/dashboard.html`.
-- Click **🔄 Re-subscribe Page Webhooks** or re-connect your Page on `https://facebook.oneingo.ai/index.html`.
+- Open `https://facebook.oneinfo.ai/dashboard.html`.
+- Click **🔄 Re-subscribe Page Webhooks** or re-connect your Page on `https://facebook.oneinfo.ai/index.html`.
 
 ---
 
@@ -151,7 +151,7 @@ When submitting your app for Meta approval or recording your demonstration video
 | **`pages_read_user_content`** | Trigger Keyword Detection | Allows reading commenter message text and profile IDs on Page posts so keyword matching rules can detect triggers and dispatch replies. |
 
 > [!NOTE]
-> All 7 scopes are visibly presented and audited with live status badges directly on **`https://facebook.oneingo.ai/index.html`** and **`https://facebook.oneingo.ai/dashboard.html`**! Reviewers will see full transparency during your screencast.
+> All 7 scopes are visibly presented and audited with live status badges directly on **`https://facebook.oneinfo.ai/index.html`** and **`https://facebook.oneinfo.ai/dashboard.html`**! Reviewers will see full transparency during your screencast.
 
 ---
 
@@ -162,19 +162,19 @@ Meta requires a **screencast video** (typically 2 to 4 minutes) demonstrating ho
 ### Screencast Video Script & Step-by-Step Flow:
 
 1. **Step 1: Introduction & Permissions Transparency (0:00 - 0:45)**
-   - Open browser at `https://facebook.oneingo.ai/index.html`.
+   - Open browser at `https://facebook.oneinfo.ai/index.html`.
    - Show the **"Meta App Review Scopes & Permissions Guide"** card. Point out the 7 required scopes and their purposes.
    - Click **Connect Facebook (Direct OAuth Flow)**.
    - Show the Facebook OAuth consent dialog asking for Page management and messaging permissions. Accept and connect.
    - Show the successfully connected Page with active permission badges.
 
 2. **Step 2: Dashboard & Webhook Readiness (0:45 - 1:15)**
-   - Navigate to `https://facebook.oneingo.ai/dashboard.html`.
+   - Navigate to `https://facebook.oneinfo.ai/dashboard.html`.
    - Point out the **Ready for Meta Screencast** banner and green readiness checks.
    - Click **🧪 Ping Webhook Verification** to show successful HTTP 200 verification handshake.
 
 3. **Step 3: Messenger Auto-Reply Demonstration (`pages_messaging`) (1:15 - 2:00)**
-   - Navigate to `https://facebook.oneingo.ai/messenger.html`.
+   - Navigate to `https://facebook.oneinfo.ai/messenger.html`.
    - Point out the **Scope: pages_messaging** badge in the header.
    - Show that **Messenger Auto-Reply Status** is ON.
    - Show a keyword rule (e.g., keyword `price` -> *"Our packages start at $29/mo!*").
@@ -184,7 +184,7 @@ Meta requires a **screencast video** (typically 2 to 4 minutes) demonstrating ho
    - Switch back to the Dashboard and show the event logged in the **Live Webhooks Stream**.
 
 4. **Step 4: Comment Auto-Reply Demonstration (`pages_manage_engagement`, `pages_read_engagement`) (2:00 - 3:00)**
-   - Navigate to `https://facebook.oneingo.ai/comments.html`.
+   - Navigate to `https://facebook.oneinfo.ai/comments.html`.
    - Point out the **Scopes: pages_manage_engagement, pages_read_engagement** badge.
    - Show **Global Comment Auto-Reply** set to ON, with **Auto-Like** enabled and a public reply message.
    - Open Facebook with the tester account and leave a comment on a Page post: *"Awesome post!"*
@@ -192,9 +192,9 @@ Meta requires a **screencast video** (typically 2 to 4 minutes) demonstrating ho
    - Show on Facebook that the Page liked the comment and replied publicly!
 
 5. **Step 5: Post Publishing Demonstration (`pages_manage_posts`) (3:00 - 3:45)**
-   - Navigate to `https://facebook.oneingo.ai/posts.html`.
+   - Navigate to `https://facebook.oneinfo.ai/posts.html`.
    - Point out the **Scope: pages_manage_posts** badge.
-   - Type a post message: *"Announcing our new automated features on facebook.oneingo.ai! 🚀"*
+   - Type a post message: *"Announcing our new automated features on facebook.oneinfo.ai! 🚀"*
    - Click **🚀 Publish to Facebook Page**.
    - Show the success alert with post ID.
    - Open the live Facebook Page on facebook.com and refresh the feed to show the published post!
@@ -207,12 +207,12 @@ Meta requires a **screencast video** (typically 2 to 4 minutes) demonstrating ho
 
 ## 6. Live Testing Verification Checklist
 
-Before submitting to Meta, verify the following on `https://facebook.oneingo.ai`:
+Before submitting to Meta, verify the following on `https://facebook.oneinfo.ai`:
 
 - [ ] `/health` returns `{ "status": "ok", "mongodb": { "status": "connected" } }`
-- [ ] `https://facebook.oneingo.ai/privacy.html` opens cleanly
-- [ ] `https://facebook.oneingo.ai/terms.html` opens cleanly
-- [ ] `https://facebook.oneingo.ai/data-deletion.html` opens cleanly
+- [ ] `https://facebook.oneinfo.ai/privacy.html` opens cleanly
+- [ ] `https://facebook.oneinfo.ai/terms.html` opens cleanly
+- [ ] `https://facebook.oneinfo.ai/data-deletion.html` opens cleanly
 - [ ] Meta Developer App Webhook handshake returns green when clicking **Verify and Save**
-- [ ] Facebook Page connection OAuth flow redirects cleanly back to `https://facebook.oneingo.ai/dashboard.html?connected=true`
+- [ ] Facebook Page connection OAuth flow redirects cleanly back to `https://facebook.oneinfo.ai/dashboard.html?connected=true`
 - [ ] All 7 scopes display `✅ Granted` in the Dashboard and Connect page

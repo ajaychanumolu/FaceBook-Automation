@@ -13,7 +13,7 @@ services:
       - key: PORT
         value: 3000
       - key: BASE_URL
-        value: https://facebook.oneingo.ai
+        value: https://facebook.oneinfo.ai
       - key: META_APP_ID
         value: "2182342416011858"
       - key: META_CONFIG_ID
