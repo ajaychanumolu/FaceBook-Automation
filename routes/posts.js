@@ -94,7 +94,7 @@ router.post('/publish', async (req, res) => {
  */
 router.post('/schedule', async (req, res) => {
   try {
-    const { message, photoUrl, link, scheduledTime } = req.body;
+    const { message, photoUrl, link, scheduledTime, timezoneOffset } = req.body;
 
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
@@ -104,8 +104,24 @@ router.post('/schedule', async (req, res) => {
       return res.status(400).json({ error: 'Scheduled time is required' });
     }
 
-    const targetDate = new Date(scheduledTime);
-    if (isNaN(targetDate.getTime()) || targetDate <= new Date()) {
+    let targetDate;
+    if (typeof scheduledTime === 'string') {
+      const isIsoWithZone = scheduledTime.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(scheduledTime);
+      if (isIsoWithZone) {
+        targetDate = new Date(scheduledTime);
+      } else if (timezoneOffset !== undefined && timezoneOffset !== null) {
+        // Fallback: If sent without timezone offset/Z, use client's timezoneOffset in minutes
+        const offsetMinutes = parseInt(timezoneOffset, 10) || 0;
+        const localTimestamp = new Date(scheduledTime + 'Z').getTime();
+        targetDate = new Date(localTimestamp + (offsetMinutes * 60000));
+      } else {
+        targetDate = new Date(scheduledTime);
+      }
+    } else {
+      targetDate = new Date(scheduledTime);
+    }
+
+    if (isNaN(targetDate.getTime()) || targetDate.getTime() <= Date.now()) {
       return res.status(400).json({ error: 'Scheduled time must be a valid future date and time' });
     }
 
@@ -119,7 +135,7 @@ router.post('/schedule', async (req, res) => {
 
     res.json({
       success: true,
-      message: `Post scheduled for ${targetDate.toLocaleString()}`,
+      message: `Post scheduled successfully for ${targetDate.toISOString()}`,
       post
     });
   } catch (err) {

@@ -90,7 +90,7 @@
         <div class="form-group">
           <label for="scheduleTime">Date and Time *</label>
           <input type="datetime-local" id="scheduleTime" required>
-          <div class="help-text">Select a time in the future.</div>
+          <div class="help-text">Select time in your local timezone (<span id="userTzDisplay" style="font-weight: 600; color: var(--primary);">Local Time</span>). Posts will publish at this exact minute.</div>
         </div>
 
         <button type="submit" id="scheduleBtn" class="btn btn-success">
@@ -144,12 +144,35 @@
       box.style.display = 'block';
     }
 
-    // Set default datetime-local to 5 minutes from now
+    // Set default datetime-local to 5 minutes from now in local timezone
     function setDefaultScheduleTime() {
       const now = new Date();
       now.setMinutes(now.getMinutes() + 5);
-      const localIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-      document.getElementById('scheduleTime').value = localIso;
+
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const formatted = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+      const input = document.getElementById('scheduleTime');
+      input.value = formatted;
+      input.min = formatted;
+
+      const tzEl = document.getElementById('userTzDisplay');
+      if (tzEl) {
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+          const offsetMin = -now.getTimezoneOffset();
+          const sign = offsetMin >= 0 ? '+' : '-';
+          const offH = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, '0');
+          const offM = String(Math.abs(offsetMin) % 60).padStart(2, '0');
+          tzEl.textContent = `${tz} (GMT${sign}${offH}:${offM})`;
+        } catch (_) {
+          tzEl.textContent = 'Local Time';
+        }
+      }
     }
 
     // Publish Immediately
@@ -197,14 +220,30 @@
       e.preventDefault();
       const message = document.getElementById('scheduleMessage').value.trim();
       const photoUrl = document.getElementById('schedulePhotoUrl').value.trim();
-      const scheduledTime = document.getElementById('scheduleTime').value;
+      const rawTime = document.getElementById('scheduleTime').value;
 
-      if (!message || !scheduledTime) {
+      if (!message || !rawTime) {
         showAlert('Message and Scheduled Time are both required.', 'warning');
         return;
       }
 
-      showAlert('Scheduling post...', 'info');
+      // Convert input string to Date object in browser's local timezone
+      const localDate = new Date(rawTime);
+      if (isNaN(localDate.getTime())) {
+        showAlert('Please enter a valid date and time.', 'warning');
+        return;
+      }
+
+      if (localDate.getTime() <= Date.now()) {
+        showAlert('Scheduled time must be in the future.', 'warning');
+        return;
+      }
+
+      // Send exact UTC ISO string along with client's timezone offset
+      const scheduledTimeIso = localDate.toISOString();
+      const timezoneOffset = new Date().getTimezoneOffset();
+
+      showAlert(`Scheduling post for ${localDate.toLocaleString()}...`, 'info');
       const btn = document.getElementById('scheduleBtn');
       btn.disabled = true;
 
@@ -212,12 +251,17 @@
         const res = await fetch('/api/posts/schedule', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, photoUrl: photoUrl || undefined, scheduledTime })
+          body: JSON.stringify({
+            message,
+            photoUrl: photoUrl || undefined,
+            scheduledTime: scheduledTimeIso,
+            timezoneOffset
+          })
         });
 
         const data = await res.json();
         if (data.success) {
-          showAlert(data.message, 'success');
+          showAlert(`✅ Post scheduled successfully for <strong>${localDate.toLocaleString()}</strong>`, 'success');
           document.getElementById('scheduleMessage').value = '';
           document.getElementById('schedulePhotoUrl').value = '';
           setDefaultScheduleTime();

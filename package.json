@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "keepalive": "node services/keepAlive.js",
     "tunnel": "ngrok http --url=operable-overbook-gravitate.ngrok-free.dev 3000",
     "db:clear": "node scripts/clearDatabase.js"
   },

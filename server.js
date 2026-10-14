@@ -10,6 +10,7 @@ const ScheduledPost = require('./models/ScheduledPost');
 const WebhookEvent = require('./models/WebhookEvent');
 const metaService = require('./services/meta');
 const commentPoller = require('./services/commentPoller');
+const keepAliveService = require('./services/keepAlive');
 
 const webhookRoutes = require('./routes/webhook');
 const pagesRoutes = require('./routes/pages');
@@ -167,6 +168,9 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
+// Lightweight ping endpoint for uptime monitors and keep-alive
+app.get('/ping', (req, res) => res.status(200).send('pong'));
+
 // Detailed health and diagnostics check endpoint
 app.get('/health', (req, res) => {
   const dbState = mongoose.connection.readyState;
@@ -305,39 +309,11 @@ async function connectDatabase() {
   }
 }
 
-// Render Free Tier Keep-Alive Worker (pings public endpoint every 12 minutes to prevent spin-down)
-function startKeepAliveWorker() {
-  const rawBase = process.env.BASE_URL;
-  if (!rawBase || rawBase.includes('localhost') || rawBase.includes('127.0.0.1')) {
-    return;
-  }
-  const baseUrl = rawBase.replace(/oneingo\.ai/gi, 'oneinfo.ai').replace(/\/$/, '');
-
-  const pingIntervalMs = 12 * 60 * 1000; // 12 minutes (Render sleeps after 15m)
-  console.log(`[Keep-Alive] Initializing Render Free Tier keep-alive worker (Interval: 12m, Target: ${baseUrl}/health)`);
-
-  setInterval(async () => {
-    try {
-      const pingUrl = `${baseUrl}/health`;
-      const res = await fetch(pingUrl, {
-        headers: { 'User-Agent': 'RenderKeepAliveWorker/1.0' }
-      });
-      if (res.ok) {
-        console.log(`[Keep-Alive] ✅ Keep-alive ping successful (${res.status} OK) at ${new Date().toLocaleTimeString()}`);
-      } else {
-        console.warn(`[Keep-Alive] ⚠️ Keep-alive ping returned status ${res.status}`);
-      }
-    } catch (err) {
-      console.warn(`[Keep-Alive] Notice: Ping attempt failed (${err.message})`);
-    }
-  }, pingIntervalMs);
-}
-
 // Start Server
 function startServer() {
   connectDatabase();
   commentPoller.startPoller(25000);
-  startKeepAliveWorker();
+  keepAliveService.startKeepAlive();
 
   app.listen(PORT, () => {
     console.log('====================================================');
