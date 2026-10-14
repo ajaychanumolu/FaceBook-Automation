@@ -218,8 +218,10 @@
         const res = await fetch('/api/pages/config');
         metaConfig = await res.json();
 
-        document.getElementById('displayAppId').textContent = metaConfig.appId;
-        document.getElementById('displayConfigId').textContent = metaConfig.configId;
+        const appIdEl = document.getElementById('displayAppId');
+        if (appIdEl && metaConfig.appId) appIdEl.textContent = metaConfig.appId;
+        const configIdEl = document.getElementById('displayConfigId');
+        if (configIdEl && metaConfig.configId) configIdEl.textContent = metaConfig.configId;
 
         window.fbAsyncInit = function() {
           FB.init({
