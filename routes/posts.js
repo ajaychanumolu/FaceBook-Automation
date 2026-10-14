@@ -115,7 +115,10 @@ router.post('/schedule', async (req, res) => {
         const localTimestamp = new Date(scheduledTime + 'Z').getTime();
         targetDate = new Date(localTimestamp + (offsetMinutes * 60000));
       } else {
-        targetDate = new Date(scheduledTime);
+        // Fallback for cached browsers sending raw YYYY-MM-DDTHH:mm: default to IST offset (-330 minutes / +5:30)
+        const defaultOffsetMinutes = process.env.TIMEZONE_OFFSET_MINUTES ? parseInt(process.env.TIMEZONE_OFFSET_MINUTES, 10) : -330;
+        const localTimestamp = new Date(scheduledTime + 'Z').getTime();
+        targetDate = new Date(localTimestamp + (defaultOffsetMinutes * 60000));
       }
     } else {
       targetDate = new Date(scheduledTime);
